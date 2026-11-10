@@ -47,6 +47,7 @@ jobs:
           mkdir _site
           cp index.html _site/
           cp data.json _site/
+          cp -r assets _site/
       - uses: actions/upload-pages-artifact@v3
         with:
           path: _site
