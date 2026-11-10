@@ -287,6 +287,15 @@ details[open] summary { margin-bottom: 6px; }
 .flags { background: var(--warn-soft); border-radius: 8px; padding: 8px 12px; font-size: .92rem; display: grid; gap: 6px; }
 .tcard .grp + .grp { border-top: 1px solid var(--line); padding-top: 10px; }
 .vlines { border-top: 1px solid var(--line); padding-top: 10px; gap: 8px; }
+.when { display: inline-block; font-size: .7rem; font-weight: 700; text-transform: uppercase; letter-spacing: .05em; border-radius: 4px; padding: 2px 7px; white-space: nowrap; }
+.when.ty { background: var(--belt-fill); color: var(--on-belt); }
+.when.ny { background: var(--helm); color: var(--card); }
+.ty-v { color: var(--belt); white-space: nowrap; }
+.ny-v { color: var(--helm); white-space: nowrap; }
+.tcard { align-content: start; }
+.gets { display: grid; gap: 8px; }
+.gets + .gets { border-top: 1px solid var(--line); padding-top: 10px; }
+.grow { display: grid; grid-template-columns: auto minmax(0, 1fr) auto; gap: 10px; align-items: baseline; }
 .reads { gap: 0; }
 .reads > div:first-child { padding-bottom: 10px; }
 .read { border-top: 1px solid var(--line); padding: 12px 0; display: grid; gap: 6px; }
@@ -1009,23 +1018,23 @@ __ENGINE__
     }
     const flags = rules.length ? `<div class="flags">${rules.map(x => `<div class="${x.lvl}">${esc(x.text)}</div>`).join('')}</div>` : '';
     return `<div class="card tcard"><div><h3>${esc(t.team)}</h3><p class="note">${rec(t).replace(/-/g, '–')} · gets ${esc(get.join(', ') || 'nothing')}</p></div>
-      <div class="grp"><span class="group">This year</span>${now}</div>
-      <div class="grp"><div class="row"><span class="group">Next year</span><span class="pill est">Estimate</span></div>${next}</div>
+      <div class="grp"><div class="row"><span class="when ty">This year</span></div>${now}</div>
+      <div class="grp"><div class="row"><span class="when ny">Next year</span><span class="pill est">Estimate</span></div>${next}</div>
       ${flags}</div>`;
   }
   function resultHTML() {
     const ga = st.give.a, gb = st.give.b;
     const r = E.evaluate(st.a, st.b, ga, gb), c = r.call, v = r.verdict;
     // the two things being swapped, in the same unit
+    // what each team gets, split by the season it lands in: gold for this year, purple for next
     const lines = [];
     [['a', 'b'], ['b', 'a']].forEach(([k, o]) => {
       const got = st.give[o], w = r.view[k], d = w.lineup[1] - w.lineup[0];
-      if (got.players.length) lines.push([`${got.players.map(pid => P[pid].n.split(' ').slice(1).join(' ') || P[pid].n).join(' and ')}, in ${poss(T[st[k]].team)} lineup this year${st.give[k].players.length ? ' (after what it gives up)' : ''}`, `${sgn(d) || '0.0'} a week`]);
+      if (got.players.length) lines.push({ k, when: 'ty', what: `${got.players.map(pid => P[pid].n.split(' ').slice(1).join(' ') || P[pid].n).join(' and ')} in its lineup${st.give[k].players.length ? ' (after what it gives up)' : ''}`, val: `${sgn(d) || '0.0'} a week` });
+      if (got.picks.length) lines.push({ k, when: 'ny', what: `${pickWords(got.picks)}, in any lineup`, val: `+${got.picks.reduce((n, p) => n + E.roundVal(p.round), 0).toFixed(1)} a week` });
     });
-    [['a', 'b'], ['b', 'a']].forEach(([k, o]) => {
-      const got = st.give[o];
-      if (got.picks.length) lines.push([`${pickWords(got.picks)}, in any lineup next year`, `+${got.picks.reduce((n, p) => n + E.roundVal(p.round), 0).toFixed(1)} a week`]);
-    });
+    const WHEN = { ty: 'This year', ny: 'Next year' };
+    const handsHTML = ['a', 'b'].map(k => { const mine = lines.filter(l => l.k === k); return mine.length ? `<div class="gets"><span class="tn">${esc(T[st[k]].team)} gets</span>${mine.map(l => `<div class="grow"><span class="when ${l.when}">${WHEN[l.when]}</span><span>${esc(l.what)}</span><b class="${l.when}-v">${l.val}</b></div>`).join('')}</div>` : ''; }).join('');
     const R = E.callRule, third = 'a third';
     const odds = k => { const w = r.view[k], f = (lab, x) => x ? `${lab} ${p0(x[0])} to ${p0(x[1])}` : ''; return `${T[st[k]].team}: this year ${[f('title', w.title), f('playoffs', w.po), f('last place', w.last)].filter(Boolean).join(', ') || 'no change'}; next year (estimate) picks and keepers ${ord(w.nextRank[0])} to ${ord(w.nextRank[1])} of 12, title ${rngS(w.ny.title[0])} to ${rngS(w.ny.title[1])}, playoffs ${rngS(w.ny.po[0])} to ${rngS(w.ny.po[1])}, last place ${rngS(w.ny.last[0])} to ${rngS(w.ny.last[1])}`; };
     const base = baselineHTML(r, ga, gb);
@@ -1042,7 +1051,7 @@ __ENGINE__
       .concat(r.rulesA.concat(r.rulesB).map(x => '- ' + x.text)).concat([pageURL() + '#trade-analyzer/' + encTrade()]).join('\n');
     return `${summaryCard(true)}${sheetHTML()}
       ${lines.length ? `<div class="card"><div><h3>What changes hands</h3><p class="note">Points a week added to a starting lineup.</p></div>
-        <div class="grp">${lines.map(l => `<div class="orow"><span class="k">${esc(l[0])}</span><span class="ov"><b class="flat">${l[1]}</b></span></div>`).join('')}</div></div>` : ''}
+        ${handsHTML}</div>` : ''}
       <div class="outcome">${teamCard('a', r)}${teamCard('b', r)}</div>
       <div class="card reads"><div><h3>Three ways to read it</h3><p class="note">Each uses a different yardstick, so they can disagree. Which one matters depends on what a team is going for.</p></div>
         <div class="read"><span class="group">1. Chances</span><p><b>${esc(c.band)}.</b> ${esc(c.text)}</p>
