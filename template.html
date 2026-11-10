@@ -324,6 +324,23 @@ tr.cut td { border-bottom: 2px solid var(--helm); }
 .kv dt { color: var(--muted); font-size: .9rem; }
 .kv dd { margin: 0; font-weight: 500; }
 .best td:first-child { box-shadow: inset 4px 0 0 var(--belt); padding-left: 10px; }
+.champs { display: grid; gap: 12px; }
+@media (min-width: 860px) { .champs { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); align-items: start; } }
+.champ-top { display: grid; grid-template-columns: auto minmax(0, 1fr); gap: 14px; align-items: center; }
+.champ .yr { font-family: var(--saga); font-weight: 900; font-size: 2.1rem; line-height: 1; color: var(--belt); }
+.champ-name { display: block; font-family: var(--display); font-weight: 700; font-size: 1.45rem; line-height: 1.1; margin-top: 4px; overflow-wrap: anywhere; }
+.honors { margin: 0; display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 10px 14px; border-top: 1px solid var(--line); padding-top: 10px; }
+.honor dt { font-size: .72rem; font-weight: 600; color: var(--muted); text-transform: uppercase; letter-spacing: .05em; }
+.honor dd { margin: 0; overflow-wrap: anywhere; }
+.fold summary { cursor: pointer; color: var(--helm); font-weight: 600; font-size: .9rem; }
+.fold[open] summary { margin-bottom: 6px; }
+.recs { display: grid; gap: 10px; grid-template-columns: repeat(auto-fill, minmax(230px, 1fr)); }
+.rec { background: var(--card); border: 1px solid var(--line); border-radius: 10px; padding: 12px 14px; display: grid; gap: 2px; align-content: start; overflow-wrap: anywhere; }
+.rec-l { font-size: .72rem; font-weight: 600; color: var(--muted); text-transform: uppercase; letter-spacing: .05em; }
+.rec-v { font-family: var(--display); font-weight: 700; font-size: 1.9rem; line-height: 1.1; color: var(--belt); font-variant-numeric: tabular-nums; }
+.dim { color: var(--muted); opacity: .6; }
+.alltime .sm { display: none; }
+@media (max-width: 600px) { .alltime th, .alltime td { padding: 8px 3px; font-size: .86rem; } .alltime th { font-size: .64rem; letter-spacing: .02em; } .alltime .lg { display: none; } .alltime .sm { display: inline; } }
 .pill { display: inline-block; font-size: .7rem; font-weight: 600; text-transform: uppercase; letter-spacing: .05em; border-radius: 4px; padding: 1px 6px; background: var(--belt-soft); color: var(--belt); vertical-align: 1px; }
 .pill.flag { background: var(--warn-soft); color: var(--warn); }
 .prose { display: grid; gap: 10px; max-width: 68ch; }
@@ -338,13 +355,14 @@ tr.cut td { border-bottom: 2px solid var(--helm); }
 <header class="top"><div class="top-in"><a href="#home" aria-label="Home"><img class="logo" src="assets/logo.webp" alt="" width="420" height="335"></a><div><h1><a href="#home">The Purple Helm</a></h1><span class="asof" id="asof"></span></div></div></header>
 <nav class="tabs" aria-label="Sections"><div class="tabs-in" role="tablist">
   <label class="navsel"><span class="sr">Section</span><select id="nav-select" aria-label="Section">
-    <option value="home">Home</option><option value="standings">Standings</option><option value="playoff-scenarios">Playoff scenarios</option><option value="trade-analyzer">Trade Analyzer</option><option value="keepers">Keepers</option><option value="rules">Rules</option><option value="how-it-works">How it works</option>
+    <option value="home">Home</option><option value="standings">Standings</option><option value="playoff-scenarios">Playoff scenarios</option><option value="trade-analyzer">Trade Analyzer</option><option value="keepers">Keepers</option><option value="hall-of-champions">Hall of Champions</option><option value="rules">Rules</option><option value="how-it-works">How it works</option>
   </select></label>
   <button class="tab" role="tab" data-view="home" id="tab-home">Home</button>
   <button class="tab" role="tab" data-view="standings" id="tab-standings">Standings</button>
   <button class="tab" role="tab" data-view="playoff-scenarios" id="tab-playoff-scenarios">Playoff scenarios</button>
   <button class="tab" role="tab" data-view="trade-analyzer" id="tab-trade-analyzer">Trade Analyzer</button>
   <button class="tab" role="tab" data-view="keepers" id="tab-keepers">Keepers</button>
+  <button class="tab" role="tab" data-view="hall-of-champions" id="tab-hall-of-champions">Hall of Champions</button>
   <button class="tab" role="tab" data-view="rules" id="tab-rules">Rules</button>
   <button class="tab" role="tab" data-view="how-it-works" id="tab-how-it-works">How it works</button>
 </div></nav>
@@ -356,6 +374,7 @@ tr.cut td { border-bottom: 2px solid var(--helm); }
   <section class="view" id="view-playoff-scenarios" aria-labelledby="tab-playoff-scenarios"></section>
   <section class="view" id="view-trade-analyzer" aria-labelledby="tab-trade-analyzer"></section>
   <section class="view" id="view-keepers" aria-labelledby="tab-keepers"></section>
+  <section class="view" id="view-hall-of-champions" aria-labelledby="tab-hall-of-champions"></section>
   <section class="view" id="view-rules" aria-labelledby="tab-rules">
     <div><h2>League rules</h2><p class="lede">Copied from the league's rules doc as it stood on September 9, 2026. The Google Doc is the official version: where the two differ, the doc wins.</p></div>
 __RULES__
@@ -1015,6 +1034,46 @@ __ENGINE__
   });
 
   // ---------- how it works
+  // ---------- hall of champions
+  function renderHall() {
+    const H = D.hall, el = $('#view-hall-of-champions');
+    if (!H || !H.seasons) { el.innerHTML = '<div><h2>Hall of Champions</h2><p class="lede">League history is not available right now. It will be back with the next update.</p></div>'; return; }
+    const champs = new Set(H.seasons.map(x => x.champ.user)).size, n = H.seasons.length;
+    const b2b = H.seasons.some((x, i) => i + 1 < n && x.champ.user === H.seasons[i + 1].champ.user);
+    const honor = (label, t, extra) => t ? `<div class="honor"><dt>${label}</dt><dd><span class="tn">${esc(t.team)}</span><span class="sub">${esc(t.user)} · ${extra || t.rec}</span></dd></div>` : '';
+    const seasons = H.seasons.map(x => `
+      <div class="card champ">
+        <div class="champ-top"><span class="yr">${x.season}</span>
+          <div><span class="pill">Champion</span><span class="champ-name">${esc(x.champ.team)}</span>
+          <span class="sub">${esc(x.champ.user)} · ${x.champ.rec} in the regular season</span>
+          <span class="sub">Won the two-week final ${x.final[0].toFixed(2)} to ${x.final[1].toFixed(2)}</span></div></div>
+        <dl class="honors">
+          ${honor('Runner-up', x.runner)}${honor('Third place', x.third)}
+          ${honor('Top scorer', x.top_pf, `${x.top_pf.pf.toLocaleString('en-US', { minimumFractionDigits: 1 })} points`)}${honor('Top record', x.top_rec)}
+          ${honor('Last place', x.last)}
+        </dl>
+        <details class="fold"><summary>Final regular-season standings</summary>
+          <div class="scroll"><table><thead><tr><th>Team</th><th>Record</th><th>Points</th></tr></thead><tbody>
+          ${x.table.map((t, i) => `<tr class="${i === 3 || i === 7 ? 'cut' : ''}"><td><span class="tn">${i + 1}. ${esc(t.team)}</span><span class="sub">${esc(t.user)}</span></td><td>${t.rec}</td><td>${t.pf.toLocaleString('en-US', { minimumFractionDigits: 1 })}</td></tr>`).join('')}
+          </tbody></table></div></details>
+      </div>`).join('');
+    const recs = H.records.map(r => `
+      <div class="rec"><span class="rec-l">${esc(r.label)}</span><span class="rec-v">${esc(r.value)}</span>
+        <span class="tn">${esc(r.who)}</span><span class="sub">${r.user ? esc(r.user) + ' · ' : ''}${esc(r.when)}</span><span class="sub">${esc(r.detail)}</span></div>`).join('');
+    const all = H.alltime.map(o => `<tr><td><span class="tn">${esc(o.user)}</span><span class="sub">${o.seasons} season${o.seasons === 1 ? '' : 's'}</span></td>
+      <td>${o.w}–${o.l}${o.t ? '–' + o.t : ''}</td><td>${(100 * (o.w + 0.5 * o.t) / Math.max(o.g, 1)).toFixed(0)}%</td><td>${(o.pf / Math.max(o.g, 1)).toFixed(1)}</td>
+      <td>${o.titles || '<span class="dim">0</span>'}</td><td>${o.playoffs || '<span class="dim">0</span>'}</td><td>${o.lasts || '<span class="dim">0</span>'}</td></tr>`).join('');
+    el.innerHTML = `
+      <div><h2>Hall of Champions</h2><p class="lede">Every season the league has played on Sleeper, ${H.first} to now: ${n} finished season${n === 1 ? '' : 's'}, ${champs} different champion${champs === 1 ? '' : 's'}.${b2b ? '' : ' No one has won back to back in that time, so the dynasty pool is still unclaimed.'}</p></div>
+      <div class="champs">${seasons}</div>
+      <div><h3>The record book</h3><p class="lede">Regular-season games only, ${H.first} through Week ${H.through} of ${H.season_now}. Team names are the ones in use that season.</p></div>
+      <div class="recs">${recs}</div>
+      <div class="card"><h3>All-time table</h3>
+        <div class="scroll"><table class="alltime"><thead><tr><th>Manager</th><th><span class="lg">Record</span><span class="sm">W–L</span></th><th>Win %</th><th>Pts/gm</th><th>Titles</th><th><span class="lg">Playoffs</span><span class="sm">Top 4</span></th><th>Last</th></tr></thead><tbody>${all}</tbody></table></div>
+        <p class="note">Regular-season record and points, this season included. Sorted by win percentage. Playoffs (Top 4 on a phone) counts playoff trips, and Last counts last-place finishes.</p></div>
+      <p class="note">Last place goes to the loser of the Toilet Bowl: the bottom four play in Week 15, and the two losers meet over Weeks 16 and 17. Seasons before ${H.first} were played on another site and aren't in this data.</p>`;
+  }
+
   function renderHow() {
     const rounds = Array.from({ length: 15 }, (_, i) => i + 1).map(r => `<div><span>${ord(r)}</span><b>${E.roundVal(r).toFixed(1)}</b></div>`).join('');
     const B = E.bands;
@@ -1060,8 +1119,8 @@ __ENGINE__
   }
 
   // ---------- routing
-  const VIEWS = ['home', 'standings', 'playoff-scenarios', 'trade-analyzer', 'keepers', 'rules', 'how-it-works'];
-  const HERO = { 'home': 'home', 'standings': 'standings', 'playoff-scenarios': 'war-room', 'trade-analyzer': 'trading-hall', 'keepers': 'hall' };
+  const VIEWS = ['home', 'standings', 'playoff-scenarios', 'trade-analyzer', 'keepers', 'hall-of-champions', 'rules', 'how-it-works'];
+  const HERO = { 'home': 'home', 'standings': 'standings', 'playoff-scenarios': 'war-room', 'trade-analyzer': 'trading-hall', 'hall-of-champions': 'hall' };
   function show(v) {
     if (v === 'trade-judge') v = 'trade-analyzer';
     if (!VIEWS.includes(v)) v = 'home';
@@ -1086,7 +1145,7 @@ __ENGINE__
   $('#nav-select').addEventListener('change', e => go(e.target.value));
   $('#rules-lineup').textContent = `Starters: ${['QB', 'RB', 'WR', 'TE'].map(p => `${D.slots[p]} ${p}`).join(', ')}, ${D.n_flex} FLEX (RB/WR/TE), ${D.slots.DEF} DEF. Rosters hold ${D.roster_max} players, and the draft is 15 rounds.`;
   window.addEventListener('hashchange', () => show(location.hash.slice(1)));
-  renderHome(); renderStandings(); renderScen(); renderTrade(); renderKeepers(); renderHow();
+  renderHome(); renderStandings(); renderScen(); renderTrade(); renderKeepers(); renderHall(); renderHow();
   show(location.hash.slice(1));
 })();
 </script>

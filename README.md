@@ -11,6 +11,7 @@ The website for The Purple Helm, a 12-team keeper fantasy football league on Sle
 - **Playoff scenarios:** each team's most likely path, and a simulator where you pick the winners.
 - **Trade Analyzer:** what a trade does to each team's chances this year and next.
 - **Keepers:** every team's 2027 keeper options under the league's keeper rules, and who holds which 2027 picks.
+- **Hall of Champions:** every finished season on Sleeper (champion, runner-up, third, top scorer, top record, last place, final standings), a record book and an all-time table.
 - **Rules:** the league rules, copied from the league's rules doc.
 - **How it works:** the method, in plain words.
 
@@ -48,4 +49,6 @@ node test_scen.js        # optional
 
 - The build has not been run past Week 14 yet. Check it before the playoffs start.
 - Week-by-week odds before November 10, 2026 are rebuilt from each week's records and rosters, not recorded at the time.
+- The Hall of Champions starts in 2022, when the league moved to Sleeper. Earlier champions would have to be added by hand.
+- The record book counts regular-season games only (Weeks 1-14). Playoff and Toilet Bowl games are used for the season results, not for records.
 - Saving each day's published odds, so they can be scored against results later, is not built yet.
