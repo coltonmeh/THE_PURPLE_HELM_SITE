@@ -1,0 +1,7 @@
+cache/
+node_modules/
+data.json
+index.html
+__pycache__/
+*.bak*
+_site/

@@ -1,0 +1,62 @@
+name: Build and publish the site
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+  schedule:
+    - cron: "7 * * * *"            # every hour
+    - cron: "*/20 17-23 * * 0"     # Sunday afternoon and evening games (UTC)
+    - cron: "*/20 0-5 * * 1,2,5"   # Sunday, Monday and Thursday night games (UTC)
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: pip install numpy scipy
+      # Sleeper asks that the full player list be pulled at most once a day. This keeps the downloaded files between runs.
+      - uses: actions/cache@v4
+        with:
+          path: cache
+          key: sleeper-${{ github.run_id }}
+          restore-keys: sleeper-
+      - name: Pull the league data and run the simulations
+        run: python build_data.py
+      - name: Assemble the page
+        run: python build_page.py
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+      - name: Check the numbers before publishing
+        run: PH_SOFT=1 node test_scen.js
+      - name: Collect the files to publish
+        run: |
+          mkdir _site
+          cp index.html _site/
+          cp data.json _site/
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: _site
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - id: deployment
+        uses: actions/deploy-pages@v4

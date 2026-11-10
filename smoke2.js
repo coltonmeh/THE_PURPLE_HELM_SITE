@@ -1,0 +1,14 @@
+const fs = require('fs');
+const { JSDOM, VirtualConsole } = require('jsdom');
+const errors = [];
+const vc = new VirtualConsole(); vc.on('jsdomError', e => errors.push(String(e.detail || e.message)));
+const dom = new JSDOM(fs.readFileSync('index.html', 'utf8'), { runScripts: 'dangerously', pretendToBeVisual: true, virtualConsole: vc, url: 'https://example.org/#keepers' });
+const d = dom.window.document, q = s => d.querySelector(s), qa = s => [...d.querySelectorAll(s)];
+const D = JSON.parse(fs.readFileSync('data.json'));
+console.log('view on:', qa('.view.on').map(v => v.id), '| options:', qa('#keeper-team option').length, '| cards:', qa('#view-keepers .kgrid .card').length);
+const set = v => { const s = q('#keeper-team'); s.value = String(v); s.dispatchEvent(new dom.window.Event('change', { bubbles: true })); };
+set(10);
+console.log('one team -> cards:', qa('#view-keepers .kgrid .card').length, '|', q('#view-keepers .kgrid h3').textContent, '| selected:', q('#keeper-team').value, '| rows:', qa('#view-keepers .kgrid tbody tr').length);
+set('all');
+console.log('all -> cards:', qa('#view-keepers .kgrid .card').length, '| selected:', q('#keeper-team').value);
+console.log('ERRORS:', errors.length ? errors : 'none');

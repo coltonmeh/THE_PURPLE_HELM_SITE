@@ -1,0 +1,1096 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Purple Helm League Site</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Barlow:wght@400;500;600&family=Barlow+Condensed:wght@600;700&display=swap" rel="stylesheet">
+<style>
+/* Layout idea: one phone-width column of plain cards under a sticky tab bar; belt gold marks only what a reader should act on. */
+:root {
+  --paper: #f5f2f8;
+  --card: #ffffff;
+  --ink: #1e1530;
+  --muted: #655a7a;
+  --line: #ddd4e8;
+  --helm: #55247f;
+  --helm-soft: #ece3f5;
+  --belt: #a87608;
+  --belt-soft: #fbf1d6;
+  --s-league: #6a3aa6;
+  --s-this: #a87608;
+  --good: #1c7449;  --good-soft: #e0f3e8;
+  --warn: #a85806;  --warn-soft: #fdeed8;
+  --bad: #b0271f;   --bad-soft: #fbe3e0;
+  --display: "Barlow Condensed", "Arial Narrow", "Helvetica Neue", Arial, sans-serif;
+  --body: "Barlow", "Helvetica Neue", Arial, sans-serif;
+  color-scheme: light;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --paper: #130e1d; --card: #1d162c; --ink: #ece6f6; --muted: #a79cba; --line: #342a4a;
+    --helm: #b693ff; --helm-soft: #2a2040; --belt: #e3bb4d; --belt-soft: #3a2f14; --s-league: #9272dd; --s-this: #b58b25;
+    --good: #5cc691; --good-soft: #153324; --warn: #eaa545; --warn-soft: #3a2a12; --bad: #ff8478; --bad-soft: #401c19;
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --paper: #130e1d; --card: #1d162c; --ink: #ece6f6; --muted: #a79cba; --line: #342a4a;
+  --helm: #b693ff; --helm-soft: #2a2040; --belt: #e3bb4d; --belt-soft: #3a2f14; --s-league: #9272dd; --s-this: #b58b25;
+  --good: #5cc691; --good-soft: #153324; --warn: #eaa545; --warn-soft: #3a2a12; --bad: #ff8478; --bad-soft: #401c19;
+  color-scheme: dark;
+}
+* { box-sizing: border-box; }
+html { -webkit-text-size-adjust: 100%; }
+body { margin: 0; background: var(--paper); color: var(--ink); font: 400 16px/1.45 var(--body); font-variant-numeric: tabular-nums; }
+h1, h2, h3 { font-family: var(--display); font-weight: 700; letter-spacing: .01em; margin: 0; text-wrap: balance; }
+h2 { font-size: 1.55rem; line-height: 1.1; }
+h3 { font-size: 1.2rem; line-height: 1.15; }
+p { margin: 0; }
+a { color: var(--helm); }
+button, select { font: inherit; color: inherit; }
+:focus-visible { outline: 3px solid var(--belt); outline-offset: 2px; }
+
+.top { background: var(--helm); color: #fff; border-bottom: 4px solid var(--belt); }
+:root[data-theme="dark"] .top { background: #2b1747; }
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) .top { background: #2b1747; } }
+.top-in { max-width: 980px; margin: 0 auto; padding: 14px 16px 12px; display: flex; flex-wrap: wrap; align-items: baseline; gap: 4px 16px; }
+.top h1 { font-size: 1.9rem; text-transform: uppercase; letter-spacing: .04em; line-height: 1; }
+.top .asof { font-size: .85rem; opacity: .85; }
+nav.tabs { position: sticky; top: 0; z-index: 5; background: var(--paper); border-bottom: 1px solid var(--line); }
+.tabs-in { max-width: 980px; margin: 0 auto; padding: 8px 16px; display: flex; gap: 6px; overflow-x: auto; }
+.tab { flex: 1 0 auto; text-align: center; border: 1px solid var(--line); background: var(--card); border-radius: 999px; padding: 6px 9px; font-size: .9rem; font-weight: 600; cursor: pointer; white-space: nowrap; }
+.tab[aria-selected="true"] { background: var(--helm); border-color: var(--helm); color: var(--paper); }
+.top h1 a { color: inherit; text-decoration: none; }
+.navsel { display: none; }
+.sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+@media (max-width: 600px) {
+  .tabs-in .tab { display: none; }
+  .navsel { display: block; flex: 1; }
+  .navsel select { width: 100%; padding: 10px; border-radius: 8px; border: 1px solid var(--line); background: var(--card); color: var(--ink); font: inherit; font-weight: 600; }
+}
+main { max-width: 980px; margin: 0 auto; padding: 18px 16px 48px; display: grid; gap: 16px; }
+.view { display: none; gap: 16px; }
+.view.on { display: grid; }
+.lede { color: var(--muted); max-width: 65ch; }
+.card { background: var(--card); border: 1px solid var(--line); border-radius: 10px; padding: 14px; display: grid; gap: 10px; }
+.note { font-size: .9rem; color: var(--muted); }
+.stale { background: var(--warn-soft); color: var(--warn); border-radius: 8px; padding: 8px 12px; font-weight: 500; }
+
+.scroll { overflow-x: auto; }
+table { border-collapse: collapse; width: 100%; }
+th, td { text-align: right; padding: 8px 8px; border-bottom: 1px solid var(--line); white-space: nowrap; }
+th:first-child, td:first-child { text-align: left; white-space: normal; padding-left: 0; }
+th:last-child, td:last-child { padding-right: 0; }
+th { font-size: .78rem; font-weight: 600; color: var(--muted); text-transform: uppercase; letter-spacing: .05em; vertical-align: bottom; }
+tr:last-child td { border-bottom: 0; }
+.tn { font-weight: 600; }
+.sub { display: block; font-size: .82rem; color: var(--muted); font-weight: 400; }
+.nums { display: flex; flex-wrap: wrap; gap: 0 14px; margin-top: 2px; }
+.nums span { white-space: nowrap; }
+.nums b { color: var(--ink); font-weight: 600; }
+.nums a { color: inherit; text-decoration: underline; text-decoration-color: var(--helm); text-underline-offset: 3px; padding: 4px 6px; margin: -4px -6px; }
+.nums a b { color: var(--helm); }
+.stand { display: grid; }
+.srow { display: grid; grid-template-columns: minmax(0, 1fr) repeat(4, 88px); gap: 4px 14px; align-items: center; padding: 10px 0; border-bottom: 1px solid var(--line); }
+.srow:last-child { border-bottom: 0; }
+.srow.cut { border-bottom: 2px solid var(--helm); }
+.shead { font-size: .78rem; font-weight: 600; color: var(--muted); text-transform: uppercase; letter-spacing: .05em; padding-top: 0; }
+.shead span:not(:first-child), .stat { text-align: right; }
+.stat b { font-weight: 600; }
+.stat .lab { display: none; font-size: .72rem; font-weight: 600; color: var(--muted); text-transform: uppercase; letter-spacing: .05em; }
+@media (max-width: 600px) {
+  .shead { display: none; }
+  .srow { grid-template-columns: repeat(4, minmax(0, 1fr)); align-items: start; }
+  .steam { grid-column: 1 / -1; }
+  .stat { text-align: left; }
+  .stat .lab { display: block; }
+}
+.bar { display: block; height: 4px; border-radius: 2px; background: var(--line); margin-top: 3px; }
+.srow2 { border-bottom: 1px solid var(--line); }
+.srow2.end { border-bottom: 0; }
+.srow2 > summary, .shead2 { display: grid; grid-template-columns: minmax(0, 1fr) repeat(5, 82px); gap: 4px 12px; align-items: center; }
+.srow2 > summary { list-style: none; padding: 10px 0; color: inherit; font-size: inherit; font-weight: 400; cursor: pointer; }
+.srow2 > summary::-webkit-details-marker { display: none; }
+.srow2[open] > summary { margin-bottom: 0; }
+.srow2 .caret { color: var(--helm); margin-left: 8px; font-size: .8em; }
+.srow2 .caret::before { content: '\25B8'; }
+.srow2[open] .caret::before { content: '\25BE'; }
+.shead2 { font-size: .78rem; font-weight: 600; color: var(--muted); text-transform: uppercase; letter-spacing: .05em; padding-bottom: 6px; border-bottom: 1px solid var(--line); }
+.shead2 span:not(:first-child) { text-align: right; }
+.stat.rec b { font-size: 1.15rem; }
+.smore { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 10px 16px; padding: 2px 0 14px; }
+.smore span { display: block; font-size: .72rem; font-weight: 600; color: var(--muted); text-transform: uppercase; letter-spacing: .05em; }
+.smore .nums span { display: inline; font-size: 1rem; font-weight: 400; text-transform: none; letter-spacing: 0; color: var(--ink); }
+.smore b { font-weight: 600; }
+.cutlab { font-size: .7rem; font-weight: 600; text-transform: uppercase; letter-spacing: .08em; color: var(--helm); border-top: 2px solid var(--helm); margin-top: -1px; padding: 2px 0 0; text-align: right; }
+@media (max-width: 600px) {
+  .shead2 { display: none; }
+  .srow2 > summary { grid-template-columns: repeat(5, minmax(0, 1fr)); align-items: start; gap: 4px 8px; }
+  .srow2 .steam { grid-column: 1 / -1; }
+  .srow2 .stat .lab { display: flex; align-items: flex-end; min-height: 2.3em; line-height: 1.1; }
+}
+:root { --c1: #2a78d6; --c2: #eb6834; --c3: #1baf7a; --c4: #eda100; --c5: #e87ba4; --c6: #008300; --c7: #6250d6; --c8: #e34948; --c-rest: #cfc8dc; --grid: #e7e1ef; }
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) { --c1: #3987e5; --c2: #d95926; --c3: #199e70; --c4: #c98500; --c5: #d55181; --c6: #008300; --c7: #9085e9; --c8: #e66767; --c-rest: #473d5e; --grid: #2c2340; } }
+:root[data-theme="dark"] { --c1: #3987e5; --c2: #d95926; --c3: #199e70; --c4: #c98500; --c5: #d55181; --c6: #008300; --c7: #9085e9; --c8: #e66767; --c-rest: #473d5e; --grid: #2c2340; }
+.two { display: grid; gap: 16px; align-items: start; }
+@media (min-width: 860px) { .two { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); } }
+.viz { position: relative; }
+.viz svg { display: block; width: 100%; height: auto; touch-action: pan-y; outline-offset: 2px; }
+.viz svg:focus:not(:focus-visible) { outline: none; }
+.viz text { font-family: var(--body); font-size: 11px; fill: var(--muted); }
+.tip { position: absolute; top: 4px; pointer-events: none; background: var(--card); border: 1px solid var(--line); border-radius: 8px; padding: 6px 9px; font-size: .82rem; box-shadow: 0 4px 14px rgba(0, 0, 0, .18); min-width: 150px; max-width: 220px; z-index: 2; }
+.tip .th { font-weight: 600; margin-bottom: 2px; }
+.tip .tr { display: flex; justify-content: space-between; gap: 10px; }
+.tip .tr span { color: var(--muted); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.key { display: inline-block; width: 14px; height: 3px; border-radius: 2px; margin-right: 6px; vertical-align: middle; flex: none; }
+.key { background: currentColor; }
+.key.dash { background: linear-gradient(90deg, currentColor 0 5px, transparent 5px 9px, currentColor 9px 14px); }
+.lg { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 2px 16px; font-size: .84rem; }
+.lg .lgh { grid-column: 1 / -1; font-weight: 600; }
+.lg > span { display: flex; align-items: center; min-width: 0; color: var(--muted); }
+.lg .nm { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; flex: 1; min-width: 0; }
+.lg b { color: var(--ink); font-weight: 600; margin-left: 6px; }
+.lg .hl .nm { color: var(--ink); font-weight: 600; }
+.mgame { border: 1px solid var(--line); border-radius: 8px; padding: 6px 10px; }
+.mrow { display: grid; grid-template-columns: minmax(0, 1fr) 52px 52px; gap: 2px 12px; padding: 3px 0; align-items: baseline; }
+.mrow.two { grid-template-columns: minmax(0, 1fr) auto; }
+.mrow.mhead { padding: 0 11px; }
+.mrow .nm { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.mrow .w { font-weight: 600; }
+.mrow .num { text-align: right; min-width: 52px; }
+.mhead { font-size: .72rem; font-weight: 600; color: var(--muted); text-transform: uppercase; letter-spacing: .05em; padding-top: 0; }
+.bracket { display: grid; gap: 8px; }
+.bgame { border: 1px solid var(--line); border-radius: 8px; padding: 8px 10px; display: grid; gap: 2px; }
+.bgame .seed { color: var(--muted); display: inline-block; min-width: 2.2em; }
+.rulebook ol { margin: 0; padding-left: 22px; display: grid; gap: 7px; }
+.rulebook ol ol { list-style: lower-alpha; margin-top: 6px; }
+.rulebook ol ol ol { list-style: lower-roman; }
+.rulebook ol ol ol ol { list-style: decimal; }
+.rulebook details { border-top: 1px solid var(--line); padding-top: 8px; }
+.rulebook details > * + * { margin-top: 8px; }
+.board td, .board th { padding: 5px 6px; font-size: .82rem; text-align: center; }
+.board td.mv { background: var(--belt-soft); color: var(--ink); font-weight: 600; }
+.race { display: grid; }
+.race-team { display: grid; gap: 6px; padding: 12px 0; border-bottom: 1px solid var(--line); }
+.race-team:first-child { padding-top: 0; }
+.race-team:last-child { border-bottom: 0; padding-bottom: 0; }
+.rt-head { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: baseline; gap: 2px 12px; }
+.race-team .pill { margin-right: 4px; }
+details summary { cursor: pointer; color: var(--helm); font-weight: 600; font-size: .9rem; }
+details[open] summary { margin-bottom: 6px; }
+.bar i { display: block; height: 100%; border-radius: 2px; background: var(--helm); }
+.bar.lake i { background: var(--bad); }
+
+.sides { display: grid; gap: 12px; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); }
+.side label, .field { font-size: .78rem; font-weight: 600; color: var(--muted); text-transform: uppercase; letter-spacing: .05em; display: grid; gap: 4px; }
+.field { max-width: 420px; }
+.side select, .field select { width: 100%; padding: 9px 10px; border-radius: 8px; border: 1px solid var(--line); background: var(--paper); font-weight: 600; font-size: 1rem; text-transform: none; letter-spacing: 0; }
+.field select { background: var(--card); }
+.gives { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; min-height: 32px; }
+.gives .lbl { font-weight: 600; }
+.chip { background: var(--helm-soft); color: var(--ink); border-radius: 999px; padding: 3px 10px; font-size: .9rem; font-weight: 500; }
+.group { font-size: .78rem; font-weight: 600; color: var(--muted); text-transform: uppercase; letter-spacing: .05em; }
+.picks { display: flex; flex-wrap: wrap; gap: 6px; }
+.asset { border: 1px solid var(--line); background: var(--paper); border-radius: 8px; cursor: pointer; text-align: left; }
+.asset[aria-pressed="true"] { background: var(--helm); border-color: var(--helm); color: var(--paper); }
+.asset[aria-pressed="true"] .sub, .asset[aria-pressed="true"] .tag { color: inherit; opacity: .85; }
+.asset.pick { padding: 6px 10px; font-weight: 600; }
+.asset.pick .sub { display: inline; margin-left: 4px; }
+.players { display: grid; gap: 6px; max-height: 330px; overflow-y: auto; padding-right: 2px; }
+.asset.player { padding: 7px 10px; display: grid; grid-template-columns: 1fr auto; gap: 2px 10px; align-items: baseline; width: 100%; }
+.asset.player .nm { font-weight: 600; }
+.asset.player .val { font-weight: 600; }
+.asset.player .sub { grid-column: 1 / -1; }
+.tag { font-size: .78rem; color: var(--muted); }
+
+.verdict { border-left: 6px solid var(--line); }
+.verdict.even { border-left-color: var(--good); }
+.verdict.lean { border-left-color: var(--warn); }
+.verdict.lop { border-left-color: var(--bad); }
+.band { display: inline-block; font-family: var(--display); font-weight: 700; font-size: 1.5rem; line-height: 1.1; padding: 2px 10px; border-radius: 6px; }
+.even .band { background: var(--good-soft); color: var(--good); }
+.lean .band { background: var(--warn-soft); color: var(--warn); }
+.lop .band { background: var(--bad-soft); color: var(--bad); }
+.outcome { display: grid; gap: 12px; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); }
+.team-out { border: 1px solid var(--line); border-radius: 8px; padding: 12px; display: grid; gap: 10px; }
+.metric { display: grid; grid-template-columns: 1fr auto; gap: 0 12px; align-items: baseline; }
+.metric .k { font-weight: 600; }
+.metric .v { font-family: var(--display); font-weight: 700; font-size: 1.7rem; line-height: 1; }
+.metric .sub { grid-column: 1 / -1; }
+.metric .v small { font-family: var(--body); font-size: .8rem; font-weight: 600; margin-left: 4px; }
+.up { color: var(--good); } .down { color: var(--bad); } .flat { color: var(--muted); }
+.base { display: grid; gap: 8px; border: 1px solid var(--line); border-radius: 8px; padding: 12px; }
+.legend { display: flex; flex-wrap: wrap; gap: 4px 14px; font-size: .82rem; color: var(--muted); }
+.legend span { display: inline-flex; align-items: center; gap: 6px; }
+.k-dot { width: 10px; height: 10px; border-radius: 50%; background: var(--s-league); display: inline-block; }
+.k-dot.me { background: var(--s-this); }
+.k-dot.proj { background: var(--card); box-shadow: inset 0 0 0 2.5px var(--s-this); }
+.k-band { width: 18px; height: 10px; border-radius: 2px; background: var(--helm-soft); display: inline-block; }
+.strip { display: grid; }
+.brow { display: grid; grid-template-columns: minmax(0, 1fr) 2.4em; gap: 2px 8px; align-items: center; padding: 7px 0; border-bottom: 1px solid var(--line); }
+.strip .brow:last-child { border-bottom: 0; }
+.blab { grid-column: 1 / -1; }
+.btrack { position: relative; height: 18px; }
+.btrack::before { content: ""; position: absolute; left: 0; right: 0; top: 8px; height: 2px; border-radius: 1px; background: var(--line); }
+.bband { position: absolute; top: 2px; height: 14px; border-radius: 3px; background: var(--helm-soft); }
+.beven { position: absolute; top: 0; bottom: 0; width: 0; border-left: 1px dashed var(--muted); }
+.bdot { position: absolute; top: 4px; width: 10px; height: 10px; margin-left: -5px; border-radius: 50%; background: var(--s-league); box-shadow: 0 0 0 2px var(--card); }
+.brow.me .bdot, .brow.proj .bdot { top: 3px; width: 12px; height: 12px; margin-left: -6px; background: var(--s-this); }
+.brow.proj .bdot { background: var(--card); box-shadow: inset 0 0 0 2.5px var(--s-this), 0 0 0 2px var(--card); }
+.brow.me, .brow.proj { background: var(--belt-soft); margin: 0 -6px; padding-left: 6px; padding-right: 6px; border-radius: 6px; border-bottom-color: transparent; }
+.brow.me .btrack::before, .brow.proj .btrack::before { background: var(--muted); opacity: .35; }
+.bval { text-align: right; font-weight: 600; }
+.baxis { position: relative; height: 1.4em; margin-right: calc(2.4em + 8px); font-size: .75rem; color: var(--muted); }
+.baxis span { position: absolute; transform: translateX(-50%); white-space: nowrap; }
+.baxis span:first-child { transform: none; }
+@media (min-width: 640px) {
+  .brow { grid-template-columns: 250px minmax(0, 1fr) 2.6em; }
+  .blab { grid-column: auto; }
+  .baxis { margin-left: 258px; margin-right: calc(2.6em + 8px); }
+}
+.band.both { background: var(--good-soft); color: var(--good); }
+.band.favors { background: var(--warn-soft); color: var(--warn); }
+.band.bad { background: var(--bad-soft); color: var(--bad); }
+.band.close, .band.open { background: var(--helm-soft); color: var(--ink); }
+.verdict.both { border-left-color: var(--good); } .verdict.favors { border-left-color: var(--warn); } .verdict.bad { border-left-color: var(--bad); }
+.tagw { font-size: .78rem; font-weight: 600; }
+.pill.est { background: var(--belt-soft); color: var(--ink); }
+.flags { background: var(--warn-soft); border-radius: 8px; padding: 8px 12px; font-size: .92rem; display: grid; gap: 6px; }
+.tcard .grp + .grp { border-top: 1px solid var(--line); padding-top: 10px; }
+.vlines { border-top: 1px solid var(--line); padding-top: 10px; gap: 8px; }
+.vlines .orow .k { font-weight: 400; }
+.dd { padding-top: 0; padding-bottom: 0; gap: 0; }
+.dd details { border-bottom: 1px solid var(--line); padding: 0 0 12px; }
+.dd details:last-child { border-bottom: 0; }
+.dd details:not([open]) { padding-bottom: 0; }
+.dd summary { min-height: 48px; display: flex; align-items: center; justify-content: space-between; font-size: 1rem; list-style: none; }
+.dd summary::-webkit-details-marker { display: none; }
+.dd summary::after { content: '\25BE'; }
+.dd details[open] summary::after { content: '\25B4'; }
+.dd details > * + * { margin-top: 10px; }
+.prose-list { margin: 0; padding-left: 20px; display: grid; gap: 6px; }
+button.chip { border: 0; cursor: pointer; font: inherit; font-size: .9rem; font-weight: 500; text-decoration: underline; text-decoration-color: var(--helm); text-underline-offset: 3px; min-height: 32px; }
+button.chip[aria-expanded="true"] { background: var(--helm); color: var(--paper); }
+.btn.primary { background: var(--helm); color: var(--paper); }
+.sheet { border-color: var(--helm); }
+.rounds div.on { border-color: var(--helm); background: var(--helm-soft); }
+.grp { display: grid; gap: 4px; }
+.grp + .grp { border-top: 1px solid var(--line); padding-top: 10px; }
+.grp .group { margin-bottom: 2px; }
+.orow { display: flex; justify-content: space-between; align-items: baseline; gap: 12px; }
+.orow .k { font-weight: 500; }
+.ov { display: inline-flex; align-items: baseline; gap: 6px; color: var(--muted); white-space: nowrap; flex: 0 0 auto; }
+.orow .k { min-width: 0; }
+.ov b { font-family: var(--display); font-size: 1.25rem; line-height: 1; }
+.ov b.flat { color: var(--ink); }
+.sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
+.rules { list-style: none; margin: 0; padding: 0; display: grid; gap: 8px; }
+.rules li { display: grid; grid-template-columns: auto 1fr; gap: 8px; align-items: start; font-size: .95rem; }
+.dot { width: 10px; height: 10px; border-radius: 50%; margin-top: 6px; background: var(--muted); }
+.warn .dot { background: var(--warn); border-radius: 2px; transform: rotate(45deg); }
+.btn { border: 1px solid var(--helm); background: transparent; color: var(--helm); border-radius: 8px; padding: 8px 14px; font-weight: 600; cursor: pointer; justify-self: start; }
+.btn.quiet { border-color: var(--line); color: var(--muted); }
+.row { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+.empty { color: var(--muted); border: 1px dashed var(--line); border-radius: 10px; padding: 18px 14px; }
+
+.seg { display: inline-flex; gap: 3px; padding: 3px; border: 1px solid var(--line); border-radius: 999px; background: var(--card); justify-self: start; }
+.seg button { border: 0; background: transparent; border-radius: 999px; padding: 7px 14px; font-weight: 600; cursor: pointer; white-space: nowrap; }
+.seg button[aria-pressed="true"] { background: var(--helm); color: var(--paper); }
+.path { display: grid; gap: 4px; border-top: 1px solid var(--line); padding-top: 10px; }
+.simgrid { display: grid; gap: 16px; align-items: start; }
+@media (min-width: 860px) { .simgrid { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); } }
+.wks { display: grid; grid-template-columns: repeat(auto-fit, minmax(56px, 1fr)); gap: 6px; }
+.wk { border: 1px solid var(--line); background: var(--paper); border-radius: 8px; padding: 6px 4px; font-weight: 600; cursor: pointer; text-align: center; }
+.wk[aria-pressed="true"] { background: var(--helm); border-color: var(--helm); color: var(--paper); }
+.wk[aria-pressed="true"] .sub { color: inherit; opacity: .85; }
+.games { display: grid; gap: 8px; }
+.game { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 6px; }
+.pickbtn { border: 1px solid var(--line); background: var(--paper); border-radius: 8px; padding: 7px 10px; min-height: 48px; text-align: left; cursor: pointer; display: grid; gap: 0; }
+.pickbtn .nm { font-weight: 600; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.pickbtn[aria-pressed="true"] { background: var(--helm); border-color: var(--helm); color: var(--paper); }
+.pickbtn[aria-pressed="true"] .sub { color: inherit; opacity: .85; }
+.pickbtn.lost { opacity: .55; }
+.quick { display: grid; gap: 8px; grid-template-columns: 1fr 1fr; border-top: 1px solid var(--line); padding-top: 10px; }
+.quick .field { grid-column: 1 / -1; max-width: none; }
+.quick .field select { background: var(--paper); }
+.quick .btn { justify-self: stretch; }
+.btn[disabled] { opacity: .45; cursor: default; }
+tr.cut td { border-bottom: 2px solid var(--helm); }
+.ends { table-layout: fixed; }
+.ends th, .ends td { padding-left: 4px; padding-right: 4px; }
+.ends th { white-space: normal; }
+.ends col.c-rec { width: 58px; } .ends col.c-odd { width: 70px; }
+.ends .tn { font-size: .95rem; }
+.ends td:first-child .sub { white-space: nowrap; }
+.nb { white-space: nowrap; }
+.kgrid { display: grid; gap: 12px; grid-template-columns: repeat(auto-fit, minmax(min(100%, 430px), 1fr)); align-items: start; }
+.kname { color: inherit; text-decoration: none; }
+.kname::after { content: ' \25B8'; color: var(--helm); font-size: .8em; }
+.kv { display: grid; grid-template-columns: minmax(96px, auto) minmax(0, 1fr); gap: 3px 12px; margin: 0; }
+.kv dt { color: var(--muted); font-size: .9rem; }
+.kv dd { margin: 0; font-weight: 500; }
+.best td:first-child { box-shadow: inset 4px 0 0 var(--belt); padding-left: 10px; }
+.pill { display: inline-block; font-size: .7rem; font-weight: 600; text-transform: uppercase; letter-spacing: .05em; border-radius: 4px; padding: 1px 6px; background: var(--belt-soft); color: var(--belt); vertical-align: 1px; }
+.pill.flag { background: var(--warn-soft); color: var(--warn); }
+.prose { display: grid; gap: 10px; max-width: 68ch; }
+.prose ul { margin: 0; padding-left: 20px; display: grid; gap: 6px; }
+.rounds { display: grid; grid-template-columns: repeat(auto-fit, minmax(84px, 1fr)); gap: 6px; }
+.rounds div { border: 1px solid var(--line); border-radius: 8px; padding: 6px 8px; display: flex; justify-content: space-between; align-items: baseline; }
+.rounds b { font-family: var(--display); font-size: 1.15rem; }
+@media (prefers-reduced-motion: reduce) { * { scroll-behavior: auto !important; transition: none !important; } }
+</style>
+</head>
+<body>
+<header class="top"><div class="top-in"><h1><a href="#home">The Purple Helm</a></h1><span class="asof" id="asof"></span></div></header>
+<nav class="tabs" aria-label="Sections"><div class="tabs-in" role="tablist">
+  <label class="navsel"><span class="sr">Section</span><select id="nav-select" aria-label="Section">
+    <option value="home">Home</option><option value="standings">Standings</option><option value="playoff-scenarios">Playoff scenarios</option><option value="trade-analyzer">Trade Analyzer</option><option value="keepers">Keepers</option><option value="rules">Rules</option><option value="how-it-works">How it works</option>
+  </select></label>
+  <button class="tab" role="tab" data-view="home" id="tab-home">Home</button>
+  <button class="tab" role="tab" data-view="standings" id="tab-standings">Standings</button>
+  <button class="tab" role="tab" data-view="playoff-scenarios" id="tab-playoff-scenarios">Playoff scenarios</button>
+  <button class="tab" role="tab" data-view="trade-analyzer" id="tab-trade-analyzer">Trade Analyzer</button>
+  <button class="tab" role="tab" data-view="keepers" id="tab-keepers">Keepers</button>
+  <button class="tab" role="tab" data-view="rules" id="tab-rules">Rules</button>
+  <button class="tab" role="tab" data-view="how-it-works" id="tab-how-it-works">How it works</button>
+</div></nav>
+<main>
+  <div id="stale"></div>
+  <section class="view" id="view-home" aria-labelledby="tab-home"></section>
+  <section class="view" id="view-standings" aria-labelledby="tab-standings"></section>
+  <section class="view" id="view-playoff-scenarios" aria-labelledby="tab-playoff-scenarios"></section>
+  <section class="view" id="view-trade-analyzer" aria-labelledby="tab-trade-analyzer"></section>
+  <section class="view" id="view-keepers" aria-labelledby="tab-keepers"></section>
+  <section class="view" id="view-rules" aria-labelledby="tab-rules">
+    <div><h2>League rules</h2><p class="lede">Copied from the league's rules doc as it stood on September 9, 2026. The Google Doc is the official version: where the two differ, the doc wins.</p></div>
+__RULES__
+  </section>
+  <section class="view" id="view-how-it-works" aria-labelledby="tab-how-it-works"></section>
+</main>
+<script>const DATA = __DATA__;</script>
+<script>
+__ENGINE__
+</script>
+<script>
+(function () {
+  const D = DATA, E = makeEngine(D), P = D.players;
+  const $ = (s, el) => (el || document).querySelector(s);
+  const esc = s => String(s == null ? '' : s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+  const pct = x => x >= 0.995 ? '99%+' : x <= 0 ? '0%' : x < 0.005 ? 'under 1%' : Math.round(x * 100) + '%';
+  const sgn = x => (x > 0.049 ? '+' : x < -0.049 ? '−' : '') + Math.abs(x).toFixed(1);
+  const cls = x => x > 0.049 ? 'up' : x < -0.049 ? 'down' : 'flat';
+  const ord = E.ord;
+  const teams = D.teams.slice().sort((a, b) => (b.w + b.t / 2) - (a.w + a.t / 2) || b.pf - a.pf);
+  const T = {}; D.teams.forEach(t => { T[t.rid] = t; });
+  const rec = t => `${t.w}-${t.l}${t.t ? '-' + t.t : ''}`;
+  const wkRange = `Weeks ${D.weeks[0]}–${D.weeks[D.weeks.length - 1]}`;
+  const store = { get(k) { try { return JSON.parse(localStorage.getItem('ph-' + k)); } catch (e) { return null; } }, set(k, v) { try { localStorage.setItem('ph-' + k, JSON.stringify(v)); } catch (e) {} } };
+
+  // ---------- header
+  const asof = new Date(D.asof);
+  $('#asof').textContent = 'Data from ' + asof.toLocaleString('en-US', { timeZone: 'America/Chicago', weekday: 'short', month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' }) + ' CT';
+  const ageDays = (Date.now() - asof.getTime()) / 864e5;
+  if (ageDays > 3) $('#stale').innerHTML = `<p class="stale">This data is ${Math.floor(ageDays)} days old. Rosters, picks and projections may have changed since.</p>`;
+
+  // ---------- home: the week at a glance
+  const HI = D.hist || null;
+  let hlTeam = (function () { const v = store.get('highlight'); return v && T[v] ? v : null; })();
+  const afterWk = k => k === 0 ? 'Before Week 1' : 'After Week ' + k;
+  // Every team gets a line. Eight hues in standings order; the last four reuse the first four hues, dashed.
+  const SLOT = {}; teams.forEach((t, i) => { SLOT[t.rid] = { c: `var(--c${i % 8 + 1})`, dash: i >= 8 }; });
+  const keyHTML = rid => `<i class="key${SLOT[rid].dash ? ' dash' : ''}" style="color:${SLOT[rid].c}"></i>`;
+  function drawChart(key) {
+    const box = $('#chart-' + key); if (!box || !HI) return;
+    const wd = Math.max(280, Math.min(box.clientWidth || 340, 900)), ht = Math.round(Math.min(300, Math.max(200, wd * 0.52)));
+    const m = { l: 36, r: 12, t: 10, b: 34 }, n = HI.weeks.length;
+    const x = i => m.l + (wd - m.l - m.r) * i / (n - 1), y = v => m.t + (ht - m.t - m.b) * (1 - v);
+    const pathOf = rid => HI[key][rid].map((v, i) => (i ? 'L' : 'M') + x(i).toFixed(1) + ' ' + y(v).toFixed(1)).join('');
+    const drawn = teams.slice().sort((a, b) => (a.rid === hlTeam) - (b.rid === hlTeam));    // the highlighted team on top
+    const grid = [0, 0.25, 0.5, 0.75, 1].map(v => `<line x1="${m.l}" x2="${wd - m.r}" y1="${y(v)}" y2="${y(v)}" stroke="var(--grid)" stroke-width="1"/><text x="${m.l - 6}" y="${y(v) + 4}" text-anchor="end">${Math.round(v * 100)}%</text>`).join('');
+    const every = wd < 340 ? 2 : 1;
+    const xl = HI.weeks.map((k, i) => (n - 1 - i) % every && i !== 0 ? '' : `<text x="${x(i)}" y="${ht - m.b + 16}" text-anchor="middle">${k === 0 ? 'Start' : k}</text>`).join('');
+    const dim = t => hlTeam && t.rid !== hlTeam;
+    const lines = drawn.map(t => `<path d="${pathOf(t.rid)}" fill="none" stroke="${SLOT[t.rid].c}" stroke-width="${t.rid === hlTeam ? 3.5 : 2}"${SLOT[t.rid].dash ? ' stroke-dasharray="5 4"' : ''}${dim(t) ? ' opacity="0.3"' : ''} stroke-linejoin="round" stroke-linecap="round"/>`).join('');
+    const what = key === 'po' ? 'the playoffs' : 'the Toilet Bowl';
+    box.innerHTML = `<svg viewBox="0 0 ${wd} ${ht}" role="img" tabindex="0" aria-label="Each team's chance of ${what} after each week. Use the left and right arrow keys to read a week; the same numbers are in the table below.">
+      ${grid}${xl}<text x="${(m.l + wd - m.r) / 2}" y="${ht - 4}" text-anchor="middle">After week</text>
+      <line class="hair" x1="0" x2="0" y1="${m.t}" y2="${ht - m.b}" stroke="var(--muted)" stroke-width="1" visibility="hidden"/>
+      ${lines}<g class="marks"></g></svg>`;
+    const svg = $('svg', box), hair = $('.hair', box), marks = $('.marks', box), lg = $('#legend-' + key);
+    // The list under the chart is both the legend and the readout: every team, at the week being pointed at.
+    let at = null;
+    const readout = i => {
+      const cols = [...teams];
+      lg.innerHTML = `<div class="lgh">${i === n - 1 ? 'Today' : afterWk(HI.weeks[i])}${i === n - 1 ? '' : ' <span class="note">(rebuilt)</span>'}</div>`
+        + cols.map(t => `<span class="${t.rid === hlTeam ? 'hl' : ''}">${keyHTML(t.rid)}<span class="nm">${esc(t.team)}</span><b>${(v => v > 0 && v < 0.005 ? '<1%' : pct(v))(HI[key][t.rid][i])}</b></span>`).join('');
+      marks.innerHTML = teams.map(t => `<circle cx="${x(i)}" cy="${y(HI[key][t.rid][i])}" r="${t.rid === hlTeam ? 5 : 4}" fill="${SLOT[t.rid].c}" stroke="var(--card)" stroke-width="2"${dim(t) ? ' opacity="0.3"' : ''}/>`).join('');
+    };
+    const showAt = i => { at = Math.max(0, Math.min(n - 1, i)); hair.setAttribute('x1', x(at)); hair.setAttribute('x2', x(at)); hair.setAttribute('visibility', 'visible'); readout(at); };
+    const reset = () => { at = null; hair.setAttribute('visibility', 'hidden'); readout(n - 1); };
+    const fromEvent = e => { const r = svg.getBoundingClientRect(), px = (e.clientX - r.left) * wd / r.width; showAt(Math.round((px - m.l) / (wd - m.l - m.r) * (n - 1))); };
+    svg.addEventListener('pointermove', fromEvent); svg.addEventListener('pointerdown', fromEvent);
+    svg.addEventListener('pointerleave', e => { if (e.pointerType === 'mouse') reset(); });        // a tap stays on its week
+    svg.addEventListener('blur', reset);
+    svg.addEventListener('keydown', e => {
+      if (e.key === 'ArrowLeft' || e.key === 'ArrowRight') { e.preventDefault(); showAt((at == null ? n - 1 : at) + (e.key === 'ArrowLeft' ? -1 : 1)); }
+      else if (e.key === 'Escape') reset();
+    });
+    reset();
+  }
+  const drawCharts = () => { drawChart('po'); drawChart('b4'); };
+  function histTable(key) {
+    const head = HI.weeks.map(k => `<th>${k === 0 ? 'Start' : 'Wk ' + k}</th>`).join('');
+    const rows = teams.map(t => `<tr><td>${esc(t.team)}</td>${HI[key][t.rid].map(v => `<td>${v >= 0.995 ? '99+' : Math.round(v * 100)}</td>`).join('')}</tr>`).join('');
+    return `<details><summary>Show as a table</summary><div class="scroll"><table><thead><tr><th>Team, %</th>${head}</tr></thead><tbody>${rows}</tbody></table></div></details>`;
+  }
+  function pickBoard() {
+    const rounds = Array.from({ length: 15 }, (_, i) => i + 1), holder = {};
+    D.teams.forEach(t => rounds.forEach(r => ((D.picks[t.rid] || {})[r] || []).forEach(o => { holder[o + ':' + r] = t.rid; })));
+    const moved = teams.map(t => {
+      const got = [], gone = [];
+      rounds.forEach(r => {
+        ((D.picks[t.rid] || {})[r] || []).filter(o => o !== t.rid).forEach(o => got.push(`${ord(r)} from ${esc(T[o].team)}`));
+        const h = holder[t.rid + ':' + r]; if (h !== t.rid) gone.push(h ? `${ord(r)} to ${esc(T[h].team)}` : `${ord(r)} (gone)`);
+      });
+      return { t, got, gone };
+    }).filter(x => x.got.length || x.gone.length);
+    const short = t => esc(t.user.slice(0, 6));
+    const rows = moved.map(x => `<tr><td><span class="tn">${esc(x.t.team)}</span></td><td style="white-space:normal;text-align:left">${x.got.join('<br>') || '–'}</td><td style="white-space:normal;text-align:left">${x.gone.join('<br>') || '–'}</td></tr>`).join('');
+    const grid = rounds.map(r => `<tr><td>${ord(r)}</td>${teams.map(t => { const h = holder[t.rid + ':' + r]; return h === t.rid ? '<td>·</td>' : `<td class="mv">${h ? short(T[h]) : '–'}</td>`; }).join('')}</tr>`).join('');
+    const still = teams.length - moved.length;
+    return `<div class="card"><div><h3>2027 draft picks</h3><p class="note">Who holds what after this season's trades, which is what decides the picks each team can pay for keepers with.${still ? ` The other ${still} team${still === 1 ? ' holds' : 's hold'} all 15 of their own picks.` : ''}</p></div>
+      ${rows ? `<div class="scroll"><table><thead><tr><th>Team</th><th style="text-align:left">Picked up</th><th style="text-align:left">Traded away</th></tr></thead><tbody>${rows}</tbody></table></div>` : '<p class="empty">No 2027 picks have been traded.</p>'}
+      <details><summary>Every pick, round by round</summary><div class="scroll"><table class="board"><thead><tr><th>Rd</th>${teams.map(t => `<th>${short(t)}</th>`).join('')}</tr></thead><tbody>${grid}</tbody></table></div>
+        <p class="note">Each column is the team that started with the pick. A dot means it still holds it; a name is who holds it now. A team can use three assets in a draft (kept players plus acquired picks), so not every acquired pick will be used.</p></details></div>`;
+  }
+  function renderHome() {
+    const cur = D.sim ? D.sim.cur : D.nfl_week, wk = SG.filter(g => g.w === cur), mus = (D.week_mu || {})[cur] || {};
+    const last = (D.results || {})[D.last_done] || [];
+    // the game that moves the two races most, for the two teams playing it
+    const swing = g => ['a_po', 'b_po', 'a_b4', 'b_b4'].reduce((n, k) => n + (g[k] && g[k][0] != null && g[k][1] != null ? Math.abs(g[k][0] - g[k][1]) : 0), 0);
+    const big = (D.games || []).filter(g => g.w === cur).sort((a, b) => swing(b) - swing(a))[0];
+    let bigHTML = '';
+    if (big && swing(big) >= 0.02) {
+      const line = (rid, po, b4) => {
+        const parts = [];
+        if (po[0] != null && Math.abs(po[0] - po[1]) >= 0.01) parts.push(`playoffs ${pct(po[0])} with a win, ${pct(po[1])} with a loss`);
+        if (b4[0] != null && Math.abs(b4[0] - b4[1]) >= 0.01) parts.push(`Toilet Bowl ${pct(b4[0])} with a win, ${pct(b4[1])} with a loss`);
+        return parts.length ? `<p><b>${esc(T[rid].team)}:</b> ${parts.join('; ')}.</p>` : '';
+      };
+      const fav = big.pa >= 0.5 ? big.a : big.b;
+      bigHTML = `<div class="card"><div><h3>This week's biggest game</h3><p class="note">The Week ${cur} game that moves the playoff and Toilet Bowl races the most for the two teams in it.</p></div>
+        <p class="tn">${esc(T[big.a].team)} vs ${esc(T[big.b].team)}</p>
+        <p class="note">${esc(T[fav].team)} ${pct(Math.max(big.pa, 1 - big.pa))} to win.</p>
+        ${line(big.a, big.a_po, big.a_b4)}${line(big.b, big.b_po, big.b_b4)}</div>`;
+    }
+    const mrow = (rid, pts, pw, won) => `<div class="mrow${pw === null ? ' two' : ''}"><span class="nm${won ? ' w' : ''}">${esc(T[rid].team)}</span><span class="num${won ? ' w' : ''}">${pts}</span>${pw === null ? '' : `<span class="num note">${pw}</span>`}</div>`;
+    const nextHTML = wk.length ? `<div class="card"><div><h3>Week ${cur} matchups</h3><p class="note">Projected points for each team's best lineup, and its chance to win.</p></div>
+      <div class="mrow mhead"><span>Team</span><span class="num">Proj.</span><span class="num">Win</span></div>
+      ${wk.map(g => `<div class="mgame">${mrow(g.a, mus[g.a] != null ? mus[g.a].toFixed(0) : '–', pct(g.pa), g.pa >= 0.5)}${mrow(g.b, mus[g.b] != null ? mus[g.b].toFixed(0) : '–', pct(1 - g.pa), g.pa < 0.5)}</div>`).join('')}</div>` : '';
+    const lastHTML = last.length ? `<div class="card"><div><h3>Week ${D.last_done} results</h3></div>
+      ${last.map(g => `<div class="mgame">${mrow(g[0], g[1].toFixed(2), null, g[1] > g[3])}${mrow(g[2], g[3].toFixed(2), null, g[3] > g[1])}</div>`).join('')}</div>` : '';
+    const opts = '<option value="">All teams the same</option>' + teams.map(t => `<option value="${t.rid}"${t.rid === hlTeam ? ' selected' : ''}>${esc(t.team)} (${esc(t.user)})</option>`).join('');
+    const charts = HI ? `
+      <label class="field" for="hl-team">Make one team stand out<select id="hl-team">${opts}</select></label>
+      <div class="two">
+        <div class="card"><div><h3>Playoff chances, week by week</h3></div><div class="viz" id="chart-po"></div><div class="lg" id="legend-po"></div>${histTable('po')}</div>
+        <div class="card"><div><h3>Toilet Bowl chances, week by week</h3></div><div class="viz" id="chart-b4"></div><div class="lg" id="legend-b4"></div>${histTable('b4')}</div>
+      </div>
+      <p class="note">Point at a week, or tap it, to read every team's chance that week in the list under the chart. A team has the same color in both charts; the bottom four in the standings are dashed. Earlier weeks are rebuilt, not recorded: each point reruns the simulation from that week's records and rosters, so read the shape, not the exact number. The last point is today's.</p>` : '';
+    $('#view-home').innerHTML = `
+      <div><h2>Week ${cur}</h2><p class="lede">${D.week_live ? `Week ${D.week_live} is being played. ` : ''}Records count Weeks 1–${D.last_done}. ${SC ? `${SC.left} game${SC.left === 1 ? '' : 's'} left before the brackets are set after Week ${D.reg_end}.` : ''}</p></div>
+      ${charts}
+      ${bigHTML}
+      <div class="two">${nextHTML}${lastHTML}</div>
+`;
+    drawCharts();
+  }
+  $('#view-home').addEventListener('change', e => {
+    if (e.target.id !== 'hl-team') return;
+    hlTeam = e.target.value ? +e.target.value : null; store.set('highlight', hlTeam); drawCharts();
+  });
+  let rsz = null;
+  window.addEventListener('resize', () => { clearTimeout(rsz); rsz = setTimeout(() => { if ($('#view-home').classList.contains('on')) drawCharts(); }, 150); });
+
+  // ---------- standings
+  function gamesFor(rid) {
+    return (D.games || []).filter(g => g.a === rid || g.b === rid).map(g => {
+      const me = g.a === rid;
+      return { w: g.w, opp: me ? g.b : g.a, pw: me ? g.pa : 1 - g.pa, po: me ? g.a_po : g.b_po, b4: me ? g.a_b4 : g.b_b4 };
+    }).sort((x, y) => x.w - y.w);
+  }
+  // One race (top four, or bottom four): each team still in it, its biggest remaining game, and the rest on tap.
+  function raceHTML(title, blurb, key, word, odds) {
+    const list = teams.filter(t => odds(t) >= 0.02 && odds(t) <= 0.98).sort((x, y) => odds(y) - odds(x));
+    if (!list.length || !(D.games || []).length) return '';
+    const has = g => g[key][0] != null && g[key][1] != null;
+    const body = list.map(t => {
+      const gs = gamesFor(t.rid).map(g => Object.assign(g, { swing: has(g) ? Math.abs(g[key][0] - g[key][1]) : -1 }));
+      const top = gs.slice().sort((x, y) => y.swing - x.swing)[0];
+      const toss = g => g.pw >= 0.4 && g.pw <= 0.6 ? ' <span class="pill flag">Toss-up</span>' : '';
+      const big = top && top.swing >= 0 ? `<p><span class="pill">Biggest game</span>${toss(top)} Week ${top.w} against ${esc(T[top.opp].team)}, ${pct(top.pw)} to win. ${word} ${pct(top[key][0])} with a win, ${pct(top[key][1])} with a loss.</p>` : '';
+      const rows = gs.map(g => `<tr class="${g === top ? 'best' : ''}"><td>Wk ${g.w} · ${esc(T[g.opp].team)}${toss(g)}</td><td>${pct(g.pw)}</td><td>${has(g) ? pct(g[key][0]) : 'n/a'}</td><td>${has(g) ? pct(g[key][1]) : 'n/a'}</td></tr>`).join('');
+      return `<div class="race-team"><div class="rt-head"><span class="tn">${esc(t.team)}</span><span class="note">${word} ${pct(odds(t))} today</span></div>${big}
+        <details><summary>All remaining games</summary><div class="scroll"><table><thead><tr><th>Game</th><th>Win</th><th>If win</th><th>If loss</th></tr></thead><tbody>${rows}</tbody></table></div></details></div>`;
+    }).join('');
+    return `<div class="card"><div><h3>${title}</h3><p class="note">${blurb}</p></div><div class="race">${body}</div></div>`;
+  }
+  function renderStandings() {
+    const G = D.reg_games;
+    const live = D.week_live ? `Week ${D.week_live} is still being played. Records count Weeks 1–${D.last_done}; the odds include the Week ${D.week_live} scores so far.` : `Records count Weeks 1–${D.last_done}.`;
+    // Magic number for the top eight, shitty number for the bottom eight; a settled race shows as words instead.
+    const CN = E.clinch();
+    const gl = teams.map(t => CN[t.rid].left), gamesLeft = gl.every(x => x === gl[0]) ? ` Every team has ${gl[0]} game${gl[0] === 1 ? '' : 's'} left.` : '';
+    const nums = (t, i) => {
+      const c = CN[t.rid], num = (label, v) => `<span>${label} <a href="#playoff-scenarios" data-scen-team="${t.rid}" title="See ${esc(t.team)}'s most likely path"><b>${v}</b></a></span>`;
+      if (c.clinched) return '<span class="tn up">Clinched a playoff spot</span>';
+      if (c.locked) return '<span class="tn down">Locked into the bottom four</span>';
+      const out = [];
+      if (i < teams.length - 4) out.push(c.out ? '<span>Out of the playoff race</span>' : num('Magic number', c.magic));
+      if (i >= 4) out.push(c.safe ? '<span>Safe from the bottom four</span>' : num('Shitty number', c.shitty));
+      return out.join('');
+    };
+    const pc = x => x > 0 && x < 0.005 ? '<1%' : pct(x);         // short form so a narrow cell never wraps
+    const rows = teams.map((t, i) => `<details class="srow2${i === teams.length - 1 || i === 3 || i === 7 ? ' end' : ''}">
+      <summary>
+        <div class="steam"><span class="tn">${i + 1}. ${esc(t.team)}<span class="caret" aria-hidden="true"></span></span><span class="sub">${esc(t.user)}</span><span class="sub nums">${nums(t, i)}</span></div>
+        <div class="stat rec"><span class="lab">Record</span><b>${rec(t).replace(/-/g, '–')}</b></div>
+        <div class="stat"><span class="lab">Playoffs</span><b>${pc(t.playoffs)}</b><span class="bar"><i style="width:${(t.playoffs * 100).toFixed(1)}%"></i></span></div>
+        <div class="stat"><span class="lab">Title</span><b>${pc(t.title)}</b></div>
+        <div class="stat"><span class="lab">Toilet Bowl</span><b>${pc(t.bottom4)}</b></div>
+        <div class="stat"><span class="lab">Last place</span><b>${pc(t.last)}</b><span class="bar lake"><i style="width:${(t.last * 100).toFixed(1)}%"></i></span></div>
+      </summary>
+      <div class="smore">
+        <div><span>Projected finish</span><b>${Math.round(t.exp_wins)}–${G - Math.round(t.exp_wins)}</b>, seed ${t.seed}${t.win_lo != null ? `<div class="note">${Math.round(t.win_lo)}–${Math.round(t.win_hi)} wins in most seasons</div>` : ''}</div>
+        <div><span>Points for</span><b>${t.pf.toFixed(1)}</b></div>
+        <div><span>Projects</span><b>${t.mu.toFixed(0)}</b> a week</div>
+        <div><span>FAAB left</span><b>$${t.faab}</b></div>
+      </div></details>${i === 3 ? '<div class="cutlab">Playoff line</div>' : i === 7 ? '<div class="cutlab">Toilet Bowl line</div>' : ''}`).join('');
+    const wk = (D.games || []).length ? `Weeks ${D.games[0].w}–${D.reg_end}` : '';
+    $('#view-standings').innerHTML = `
+      <div><h2>Standings and odds</h2><p class="lede">${live}</p></div>
+      <div class="card"><div class="stand">
+        <div class="shead2"><span>Team</span><span>Record</span><span>Playoffs</span><span>Title</span><span>Toilet Bowl</span><span>Last place</span></div>
+        ${rows}</div>
+        <p class="note"><b>Tap a team</b> for its projected finish, points and FAAB. <b>Tap a magic or shitty number</b> to see that team's most likely path on the Playoff scenarios page.</p>
+        <p class="note"><b>Toilet Bowl</b> is the chance of finishing in the bottom four after Week ${D.reg_end}. <b>Last place</b> is the chance of then losing the Toilet Bowl bracket, which is the finish that earns the punishment. A team can be near certain of the first and still well short of the second.</p>
+        <p class="note">The top four make the playoffs. The odds are rough: they come from ${D.sims.toLocaleString('en-US')} simulated seasons built on Sleeper's weekly projections for each team's best lineup, and they haven't been checked against results yet. Projected finish is the average of those seasons rounded to whole wins, the range holds the middle 80% of them, and seed is where the average would rank.</p>
+        ${CN.over ? '' : `<p class="note">Magic number is the baseball count to clinch a playoff spot: a team's wins plus losses by the team it is racing. That is the best team outside the top four or, for a team outside it, the team in fourth. Shitty number is the same count for landing in the bottom four (the Toilet Bowl): a team's losses plus wins by the team it is racing, which is the team in eighth or, for a team above that line, the team in ninth. A game between the two counts twice.${gamesLeft} Ties on record are broken by points, so a tie never counts as clinched or locked.${D.week_live ? ` Week ${D.week_live} isn't final, so it counts as a game still to play.` : ''}</p>`}
+      </div>
+      ${raceHTML('Games that decide the playoff race', `Teams whose playoff spot is still open, with the ${wk} game that moves their odds the most.`, 'po', 'Playoffs', t => t.playoffs)}
+      ${raceHTML('Games that decide the bottom four', `Teams that could still land in the loser bracket, or climb out of it, with the ${wk} game that moves their odds the most.`, 'b4', 'Bottom four', t => t.bottom4)}
+      ${D.scen ? '<p class="note">Each team\'s most likely path, and a simulator where you pick the winners, are under <a href="#playoff-scenarios">Playoff scenarios</a>.</p>' : ''}`;
+  }
+
+  // ---------- playoff scenarios: each team's most likely path, and a pick-the-winners simulator
+  const SC = D.scen || null, SG = SC ? E.scenGames() : [];
+  const inRace = x => x >= 0.02 && x <= 0.98;                 // the same teams the standings tab lists as still in a race
+  const pctS = x => x >= 0.995 ? '99%+' : x < 0.005 ? 'under 1%' : Math.round(x * 100) + '%';
+  let scenView = store.get('scen-view') === 'sim' ? 'sim' : 'paths';
+  let scenTeam = (function () { const v = store.get('scen-team'); return v && T[v] ? v : 'race'; })();
+  let picks = (function () { const v = store.get('picks'); return v && v.asof === D.asof && v.picks ? v.picks : {}; })();
+  let simWeek = null, quickTeam = null;
+  function pathCard(t, open) {
+    const s = SC.teams[t.rid], L = SC.left;
+    const nb = x => `<span class="nb">${x}</span>`;
+    const fin = k => nb(`${t.w + k}–${t.l + L - k}${t.t ? '–' + t.t : ''}`);
+    const route = k => `${k === L ? `Win all ${L}` : k === 0 ? `Lose all ${L}` : `Go ${nb(`${k}–${L - k}`)}`}, finish ${fin(k)}`;
+    const at = (k, col, flip) => { const v = s.rec[k][col]; return v == null ? 'too rare to say' : pctS(flip ? 1 - v : v); };
+    const other = x => { const o = T[x.with.rid]; return `${esc(o.team)}, most often when they finish ${nb(`${o.w + x.with.k}–${o.l + L - x.with.k}${o.t ? '–' + o.t : ''}`)}`; };
+    const row = (k, v) => `<dt>${k}</dt><dd>${v}</dd>`;
+    const block = (label, p, rows) => `<div class="path"><div class="rt-head"><span class="group">${label}</span><span class="note">${pct(p)} today</span></div><dl class="kv">${rows.join('')}</dl></div>`;
+    // One race: the most common way in and, for a team already projected in, the most common way out of it.
+    const race = (x, col, w) => {
+      const rows = [];
+      if (x.in) {
+        rows.push(row(w.in, route(x.in.k)), row(`${w.chance} at ${fin(x.in.k)}`, at(x.in.k, col, false)));
+        if (!x.proj && x.in.with) rows.push(row(w.inWith, other(x.in)));
+      }
+      if (x.proj && x.out) {
+        rows.push(row(w.out, route(x.out.k)), row(`${w.outChance} at ${fin(x.out.k)}`, at(x.out.k, col, true)));
+        if (x.out.with) rows.push(row(w.outWith, other(x.out)));
+      }
+      return rows;
+    };
+    const out = [];
+    if (s.po.in && s.po.out) out.push(block('Playoffs', t.playoffs, race(s.po, 2,                 // both outcomes still show up often enough to describe
+      { in: 'Likely route in', chance: 'Gets in', inWith: 'Passes', out: 'Likely way to miss', outChance: 'Misses', outWith: 'Passed by' })));
+    if (s.b4.in && s.b4.out) out.push(block('Toilet Bowl', t.bottom4, race(s.b4, 3,
+      { in: 'Likely route in', chance: 'Lands there', inWith: 'Passed by', out: 'Likely way out', outChance: 'Gets out', outWith: 'Passes' })));
+    if (!out.length) out.push(`<div class="path"><p class="note">Neither race is open for this team today: playoffs ${pct(t.playoffs)}, Toilet Bowl ${pct(t.bottom4)}.</p></div>`);
+    const few = x => x >= 0.995 ? '99%+' : x <= 0 ? '0%' : x < 0.005 ? '<1%' : Math.round(x * 100) + '%';
+    const rows = s.rec.slice().reverse().map(r => `<tr><td>${fin(r[0])}<span class="sub">${r[0]}–${L - r[0]} from here</span></td><td>${r[1] < 0.005 ? '<1%' : few(r[1])}</td><td>${r[2] == null ? 'n/a' : few(r[2])}</td><td>${r[3] == null ? 'n/a' : few(r[3])}</td></tr>`).join('');
+    return `<div class="card"><div class="rt-head"><h3>${esc(t.team)}</h3><span class="note">${esc(t.user)} · ${rec(t)} · ${L} to play</span></div>
+      ${out.join('')}
+      <details${open ? ' open' : ''}><summary>Chances at every finish</summary><table class="ends"><colgroup><col><col class="c-rec"><col class="c-odd"><col class="c-odd"></colgroup><thead><tr><th>Finish</th><th>How often</th><th>Playoffs</th><th>Toilet Bowl</th></tr></thead><tbody>${rows}</tbody></table>
+        <p class="note">How often is the chance of that finish. The other columns are the chance of each outcome if it happens; n/a means the finish is too rare to say.</p></details></div>`;
+  }
+  function pathsHTML() {
+    const race = teams.filter(t => inRace(t.playoffs) || inRace(t.bottom4));
+    const shown = scenTeam === 'race' ? race : teams.filter(t => t.rid === scenTeam);
+    const opts = `<option value="race"${scenTeam === 'race' ? ' selected' : ''}>Teams still in a race (${race.length})</option>`
+      + teams.map(x => `<option value="${x.rid}"${x.rid === scenTeam ? ' selected' : ''}>${esc(x.team)} (${esc(x.user)})</option>`).join('');
+    return `<label class="field" for="scen-team">Show<select id="scen-team">${opts}</select></label>
+      ${shown.length ? `<div class="kgrid">${shown.map(t => pathCard(t, scenTeam !== 'race')).join('')}</div>` : '<p class="empty">Every spot is settled.</p>'}
+      <p class="note">A path is what happened most often across the ${D.sims.toLocaleString('en-US')} simulated seasons where the team ended up there: its record the rest of the way, and the team it most often traded places with. Other routes exist; the table under each team gives the chance at every finish. The list holds the teams whose chance in either race is between 2% and 98%, and any team can be picked from the menu. A race shows for a team when at least 400 of those seasons went each way. Ties in record go to points for.</p>`;
+  }
+  function simHTML() {
+    const sc = E.scenario(picks), G = D.reg_games;
+    const weeks = SG.map(g => g.w).filter((w, i, a) => a.indexOf(w) === i);
+    if (!weeks.includes(simWeek)) simWeek = weeks[0];
+    const chips = weeks.map(w => { const gs = SG.filter(g => g.w === w); return `<button class="wk" data-week="${w}" aria-pressed="${w === simWeek}">Wk ${w}<span class="sub">${gs.filter(g => picks[g.key]).length} of ${gs.length}</span></button>`; }).join('');
+    const games = SG.filter(g => g.w === simWeek).map(g => {
+      const side = (rid, n, p) => `<button class="pickbtn${picks[g.key] && picks[g.key] !== n ? ' lost' : ''}" data-game="${g.key}" data-pick="${n}" aria-pressed="${picks[g.key] === n}"><span class="nm">${esc(T[rid].team)}</span><span class="sub">${esc(T[rid].user)} · ${pct(p)}</span></button>`;
+      return `<div class="game">${side(g.a, 1, g.pa)}${side(g.b, 2, 1 - g.pa)}</div>`;
+    }).join('');
+    const qopts = '<option value="">Choose a team</option>' + teams.map(x => `<option value="${x.rid}"${x.rid === quickTeam ? ' selected' : ''}>${esc(x.team)}</option>`).join('');
+    const short = x => x >= 0.995 ? '99%+' : x < 0.005 ? '<1%' : Math.round(x * 100) + '%';
+    const was = (now, base, lock) => sc.nPicked && (lock || Math.abs(now - base) >= 0.005) ? `<span class="sub">was ${short(base)}</span>` : '';
+    const rows = sc.rows.map((r, i) => {
+      const t = T[r.rid];
+      const po = r.poLock ? `<b class="${r.poLock === 'in' ? 'up' : 'flat'}">${r.poLock === 'in' ? 'In' : 'Out'}</b>` : `<b>${short(r.po)}</b>`;
+      const b4 = r.b4Lock ? `<b class="${r.b4Lock === 'in' ? 'down' : 'flat'}">${r.b4Lock === 'in' ? 'In' : 'Safe'}</b>` : `<b>${short(r.b4)}</b>`;
+      return `<tr class="${i === 3 || i === 7 ? 'cut' : ''}"><td><span class="tn">${i + 1}. ${t.team.split(' ').map(w => `<span class="nb">${esc(w)}</span>`).join(' ')}</span><span class="sub">${rec(t)} now</span></td>
+        <td>${r.rec}–${G - r.rec - (t.t || 0)}${t.t ? '–' + t.t : ''}<span class="sub">${r.open ? r.open + ' open' : 'all picked'}</span></td>
+        <td>${po}${was(r.po, r.poWas, r.poLock)}</td><td>${b4}${was(r.b4, r.b4Was, r.b4Lock)}</td></tr>`;
+    }).join('');
+    const rough = sc.nPicked && sc.ess < 500 && sc.rows.some(r => !r.poLock || !r.b4Lock) ? '<p class="note"><b>Long-shot picks.</b> Few simulated seasons look like this set of results, so the percentages here are rougher than usual.</p>' : '';
+    return `<div class="simgrid">
+      <div class="card"><div><h3>Pick the winners</h3><p class="note">Tap a team to make it win. Tap it again to hand the game back to the simulator. The percentage is each team's chance to win that game.</p></div>
+        <div class="wks">${chips}</div>
+        <div class="games">${games}</div>
+        <div class="row"><button class="btn quiet" data-act="fav">Favorites win the rest</button><button class="btn quiet" data-act="clear"${sc.nPicked ? '' : ' disabled'}>Clear picks</button></div>
+        <div class="quick"><label class="field" for="quick-team">One team, every game<select id="quick-team">${qopts}</select></label><button class="btn" data-act="winout">Wins out</button><button class="btn" data-act="loseout">Loses out</button></div>
+      </div>
+      <div class="card" id="sim-result"><div><h3>How it ends up</h3><p class="note" aria-live="polite">${!sc.nPicked ? `No games picked yet, so this is today's projection.` : sc.nPicked === sc.nGames ? `All ${sc.nGames} games picked.` : `${sc.nPicked} of ${sc.nGames} games picked. The rest are simulated.`}</p></div>
+        <table class="ends"><colgroup><col><col class="c-rec"><col class="c-odd"><col class="c-odd"></colgroup><thead><tr><th>Team</th><th>Record</th><th>Playoffs</th><th>Toilet bowl</th></tr></thead><tbody>${rows}</tbody></table>
+        ${rough}
+        <p class="note">Top four make the playoffs; bottom four go to the Toilet Bowl. In, Out and Safe mean the records settle it whatever else happens. A percentage means it still depends on open games or on the points-for tiebreaker, which stays simulated. "Was" is today's chance before your picks. Picks are saved on this device until the data updates.</p>
+      </div></div>`;
+  }
+  function renderScen() {
+    const v = $('#view-playoff-scenarios');
+    if (!SC || !SG.length) { v.innerHTML = '<div><h2>Playoff scenarios</h2><p class="lede">The regular season is over, so the brackets are set.</p></div>'; return; }
+    const L = SC.left;
+    v.innerHTML = `
+      <div><h2>Playoff scenarios</h2><p class="lede">${L} game${L === 1 ? '' : 's'} left for every team before the brackets are set after Week ${D.reg_end}. The top four make the playoffs. The bottom four go to the Toilet Bowl, and its loser finishes last.</p></div>
+      <div class="seg" role="group" aria-label="Scenario view"><button data-scen="paths" aria-pressed="${scenView === 'paths'}">Most likely paths</button><button data-scen="sim" aria-pressed="${scenView === 'sim'}">Pick the winners</button></div>
+      <div id="scen-body" style="display:grid;gap:16px">${scenView === 'sim' ? simHTML() : pathsHTML()}</div>`;
+  }
+  const savePicks = () => store.set('picks', { asof: D.asof, picks });
+  $('#view-playoff-scenarios').addEventListener('click', e => {
+    const seg = e.target.closest('[data-scen]'), wk = e.target.closest('[data-week]'), pb = e.target.closest('.pickbtn'), act = e.target.closest('[data-act]');
+    let focus = null;
+    if (seg) { scenView = seg.dataset.scen; store.set('scen-view', scenView); focus = `[data-scen="${scenView}"]`; }
+    else if (wk) { simWeek = +wk.dataset.week; focus = `[data-week="${simWeek}"]`; }
+    else if (pb) {
+      const k = pb.dataset.game, n = +pb.dataset.pick;
+      if (picks[k] === n) delete picks[k]; else picks[k] = n;
+      savePicks(); focus = `[data-game="${k}"][data-pick="${n}"]`;
+    } else if (act) {
+      const a = act.dataset.act;
+      if (a === 'clear') picks = {};
+      else if (a === 'fav') SG.forEach(g => { if (!picks[g.key]) picks[g.key] = g.pa >= 0.5 ? 1 : 2; });
+      else if (quickTeam) SG.forEach(g => { if (g.a === quickTeam || g.b === quickTeam) picks[g.key] = (g.a === quickTeam) === (a === 'winout') ? 1 : 2; });
+      else { const q = $('#quick-team'); if (q) q.focus(); return; }
+      savePicks(); focus = `[data-act="${a}"]`;
+    } else return;
+    renderScen();
+    const f = focus && $(focus, $('#view-playoff-scenarios')); if (f && !f.disabled) f.focus({ preventScroll: true });
+  });
+  $('#view-playoff-scenarios').addEventListener('change', e => {
+    if (e.target.id === 'scen-team') { scenTeam = e.target.value === 'race' ? 'race' : +e.target.value; store.set('scen-team', scenTeam); renderScen(); const x = $('#scen-team'); if (x) x.focus(); }
+    else if (e.target.id === 'quick-team') quickTeam = e.target.value ? +e.target.value : null;
+  });
+
+  // ---------- trade analyzer
+  const st = { a: null, b: null, give: { a: { players: [], picks: [] }, b: { players: [], picks: [] } } };
+  (function init() {
+    const saved = store.get('teams');
+    st.a = saved && T[saved.a] ? saved.a : teams[0].rid;
+    st.b = saved && T[saved.b] && saved.b !== st.a ? saved.b : teams.find(t => t.rid !== st.a).rid;
+  })();
+  const pickKey = p => p.round + ':' + p.orig;
+  const pickLabel = (p, rid) => ord(p.round) + (p.orig !== rid ? ` (from ${T[p.orig].team})` : '');
+  function keeperTag(pl) {
+    if (pl.cost == null) return 'rental only';
+    return `keeper: ${ord(pl.cost)}, ${pl.yrs} yr${pl.yrs > 1 ? 's' : ''}`;
+  }
+  function sideHTML(k) {
+    const rid = st[k], t = T[rid], s = E.baseState(rid), g = st.give[k];
+    const opts = teams.map(x => `<option value="${x.rid}"${x.rid === rid ? ' selected' : ''}>${esc(x.team)} (${esc(x.user)})</option>`).join('');
+    const picks = s.own.map(r => ({ round: r, orig: rid })).concat(s.acquired).sort((x, y) => x.round - y.round);
+    const pickBtns = picks.map(p => `<button type="button" class="asset pick" data-side="${k}" data-pick="${pickKey(p)}" aria-pressed="${g.picks.some(q => pickKey(q) === pickKey(p))}">${ord(p.round)}${p.orig !== rid ? `<span class="sub">from ${esc(T[p.orig].team)}</span>` : ''}</button>`).join('');
+    const players = s.roster.slice().sort((x, y) => P[y].ros - P[x].ros).map(pid => {
+      const pl = P[pid];
+      return `<button type="button" class="asset player" data-side="${k}" data-player="${pid}" aria-pressed="${g.players.includes(pid)}">
+        <span class="nm">${esc(pl.n)}</span><span class="val">${pl.ros.toFixed(1)}</span>
+        <span class="sub">${pl.p} · ${esc(pl.t)}${pl.inj ? ' · ' + esc(pl.inj) : ''} · ${keeperTag(pl)}</span></button>`;
+    }).join('');
+    const chips = g.players.map(pid => `<span class="chip">${esc(P[pid].n)}</span>`).concat(g.picks.map(p => `<span class="chip">2027 ${esc(pickLabel(p, rid))}</span>`)).join('');
+    return `<div class="card side">
+      <label for="team-${k}">${k === 'a' ? 'First team' : 'Second team'}<select id="team-${k}" data-side="${k}">${opts}</select></label>
+      <p class="note">${rec(t)} · playoffs ${pct(t.playoffs)} · last place ${pct(t.last)}</p>
+      <div class="gives"><span class="lbl">Gives:</span>${chips || '<span class="note">nothing yet</span>'}</div>
+      <span class="group">2027 picks</span><div class="picks">${pickBtns}</div>
+      <span class="group">Players, with projected points a week for ${wkRange}</span><div class="players">${players}</div>
+    </div>`;
+  }
+  const pts = x => (x >= 0.5 ? '+' : x <= -0.5 ? '−' : '') + Math.abs(Math.round(x));
+  const gm = n => Math.abs(n - Math.round(n)) < 0.05 ? String(Math.round(n)) : n.toFixed(1);
+  const op = p => p > 0.995 ? '99%+' : p >= 0.0995 ? Math.round(p * 100) + '%' : p >= 0.0005 ? (p * 100).toFixed(1) + '%' : '0%';
+  const cap1 = x => x.charAt(0).toUpperCase() + x.slice(1);
+  // one before → after row; the after value is green when it moved the good way, red when it moved the bad way
+  function ba(label, v, fmt, goodUp, same, tail, num) {
+    const n = num || v, c = same ? 'flat' : (n[1] > n[0]) === goodUp ? 'up' : 'down';
+    return `<div class="orow"><span class="k">${label}</span><span class="ov"><span>${fmt(v[0])}</span><span aria-hidden="true">→</span><span class="sr">to</span><b class="${c}">${fmt(v[1])}</b>${tail ? `<span>${tail}</span>` : ''}</span></div>`;
+  }
+  // Before and after for one team, in the plainest units first: projected lineup points, where they rank, projected record.
+  function teamOut(s, give, get, v) {
+    const t = T[s.rid], G = D.reg_games;
+    const pk = p => p.keep.length ? p.keep.map(k => `${P[k.pid].n} (${ord(k.paid)})`).join(', ') : 'none';
+    const parts = [];
+    if (get.picks.length) parts.push(`picks in ${sgn(s.picksIn)} a week`);
+    if (give.picks.length) parts.push(`picks out ${sgn(-s.picksOut)} a week`);
+    parts.push(`best keepers: ${pk(s.pkgAfter)}`);
+    const reg = s.regGames ? `Weeks ${D.weeks[0]}–${D.reg_end}: ${sgn(s.nowReg) || '0.0'} a week × ${s.regGames} games = ${pts(s.regTotal) || '0'}. ` : '';
+    const last = D.weeks[D.weeks.length - 1];
+    const po = last < D.playoff_start ? '' : s.poGames < 0.05 ? `Weeks ${D.playoff_start}–${last} are not counted: this team is very unlikely to be in a bracket.`
+      : `Weeks ${D.playoff_start}–${last}: ${sgn(s.poTotal / s.poGames) || '0.0'} a week × ${gm(s.poGames)} expected bracket games = ${pts(s.poTotal) || '0'}.`;
+    const wk = v.avgWeeks[0] === v.avgWeeks[1] ? `Week ${v.avgWeeks[0]}` : `Weeks ${v.avgWeeks[0]}–${v.avgWeeks[1]}`;
+    const rec = w => `${Math.round(w)}–${G - Math.round(w)}`, rng = x => `${x[0]}–${x[1]}`;
+    const nd = v.next[1] - v.next[0];
+    return `<div class="team-out"><h3>${esc(t.team)}</h3>
+      <div class="grp"><span class="group">This season</span>
+        ${ba('Projected lineup', v.lineup, x => x.toFixed(1), true, Math.abs(v.lineup[1] - v.lineup[0]) < 0.05)}
+        ${ba(`Rank of ${v.teams}`, v.lineupRank, ord, false, v.lineupRank[0] === v.lineupRank[1])}
+        ${v.wins ? ba('Projected record', v.wins, rec, true, Math.round(v.wins[1]) === Math.round(v.wins[0])) : ''}
+        ${v.winRange ? ba('Likely range of wins', v.winRange, rng, true, rng(v.winRange[0]) === rng(v.winRange[1]), '', v.winRange.map(x => x[0] + x[1])) : ''}
+        <p class="note">Lineup is points a week over ${wk}. Points added: ${pts(s.nowTotal) || '0'}. ${reg}${po}</p></div>
+      <div class="grp"><span class="group">Next season</span>
+        <div class="orow"><span class="k">Picks and keepers</span><span class="ov"><b class="${Math.abs(nd) < 0.05 ? 'flat' : nd > 0 ? 'up' : 'down'}">${sgn(nd) || '0.0'}</b><span>a week</span></span></div>
+        ${ba(`Rank of ${v.teams}`, v.nextRank, ord, false, v.nextRank[0] === v.nextRank[1])}
+        <p class="note">${esc(`${sgn(s.next) || '0.0'} a week × ${s.nextGames} regular-season games = ${pts(s.nextTotal) || '0'} points. ${cap1(parts.join('; '))}.`)}</p></div>
+      ${v.title ? `<div class="grp"><span class="group">Simulated odds, rough</span>
+        ${ba('First place', v.title, op, true, Math.abs(v.title[1] - v.title[0]) < 0.0005)}
+        ${ba('Last place', v.last, op, false, Math.abs(v.last[1] - v.last[0]) < 0.0005)}</div>` : ''}</div>`;
+  }
+  // The league baseline: this trade on the same scale as past league trades (the fairness rule fixed Nov 4 2026).
+  function baselineHTML(r, ga, gb) {
+    const c = r.card, C = D.card;
+    if (!C) return '';
+    if (!c || !c.applies) return `<p class="note">The league comparison only covers trades with at least one player and one pick, so this one is compared on total points.</p>`;
+    if (c.score == null) return '';
+    const zr = { below: `better for ${T[c.seller.rid].team} than most league trades`, inside: 'in line with how this league has traded', above: `better for ${T[c.buyer.rid].team} than most league trades` };
+    const MAXS = 120, x = v => (Math.min(Math.max(v, 0), MAXS) / MAXS * 100).toFixed(1);
+    const nb = T[c.buyer.rid].team, ns = T[c.seller.rid].team;
+    const track = v => `<div class="btrack"><i class="bband" style="left:${x(C.band[0])}%;width:${(x(C.band[1]) - x(C.band[0])).toFixed(1)}%"></i><i class="beven" style="left:${x(100)}%"></i><i class="bdot" style="left:${x(v)}%"></i></div>`;
+    const row = o => `<div class="brow ${o.cls || ''}" title="${esc(o.tip)}"><div class="blab"><span class="tn">${esc(o.name)}</span><span class="sub">${esc(o.sub)}</span></div>${track(o.v)}<div class="bval">${o.v > 300 ? '300+' : Math.round(o.v)}</div></div>`;
+    const league = t => ({ v: t.score, name: `${t.players} to ${t.buyer}`, sub: `${t.year}, for ${t.paid}`,
+      tip: `${t.players} to ${t.buyer} (${t.year}): the buyer got ${Math.round(t.buyer_pts)} points, the seller ${Math.round(t.seller_pts)}` });
+    const size = t => Math.abs(Math.log(Math.max(t.seller_pts, 1) / Math.max(c.seller.total, 1)));
+    const ranked = C.trades.filter(t => t.score != null).slice().sort((p, q) => size(p) - size(q));
+    const near = ranked.slice(0, 6), rest = ranked.slice(6).sort((p, q) => p.score - q.score);
+    const rows = near.map(league);
+    rows.push({ cls: 'me', v: c.score, name: 'This trade', sub: `${nb} gets ${Math.round(c.buyer.total)} points, ${ns} gets ${Math.round(c.seller.total)}`,
+      tip: `This trade, scored the same way: ${nb} gets ${Math.round(c.buyer.total)} points, ${ns} gets ${Math.round(c.seller.total)}` });
+    // the chart scores players on their season so far, so say so when a traded player is hurt
+    const hurt = ga.players.concat(gb.players).filter(pid => ['IR', 'Out', 'PUP', 'Sus', 'NA', 'Doubtful'].includes(P[pid].inj) || !P[pid].ros)
+      .map(pid => `${P[pid].n} (${P[pid].inj ? 'listed as ' + P[pid].inj : 'no projection left this season'})`);
+    const hurtNote = hurt.length ? `<p class="stale">${esc(hurt.join(', '))}: this chart still scores ${hurt.length > 1 ? 'them' : 'him'} on points per game so far.</p>` : '';
+    rows.sort((p, q) => p.v - q.v);
+    const since = (D.trades || []).filter(t => t.created && t.created > Date.parse(C.cutoff) && Object.keys(t.adds || {}).length && (t.picks || []).length).length;
+    const more = rest.length ? `<details><summary>The other ${rest.length} league trades</summary><div class="strip">${rest.map(league).map(row).join('')}</div></details>` : '';
+    return `<div class="base"><div><h3>How it compares with league trades</h3>
+        <p class="note">Points ${esc(nb)} gets for every 100 points ${esc(ns)} gets, next to the six league trades closest in size. 100 is an even swap.</p></div>
+      <p>On this scale the trade scores ${c.score > 300 ? 'more than 300' : Math.round(c.score)}: ${esc(zr[c.zone])}. It is ${D.card.n} trades from a market still finding its level, so read it as context.</p>
+      <div class="legend"><span><i class="k-dot me"></i>This trade</span><span><i class="k-dot"></i>League trade</span><span><i class="k-band"></i>Middle half of league trades, ${Math.round(C.band[0])} to ${Math.round(C.band[1])}</span></div>
+      <div class="strip">${rows.map(row).join('')}</div>${hurtNote}
+      <div class="baxis"><span style="left:0">0, seller got it all</span><span style="left:${x(50)}%">50</span><span style="left:${x(100)}%">100, even</span></div>
+      ${more}
+      <p class="note">Every trade is scored by one rule, fixed on Nov 4, 2026. A player is worth what he adds to his new team's starting lineup at his points per game so far, times the weeks left, less 20% because per-game pace runs high. A pick is worth what players drafted in that round have added to lineups, keeper bonus included. The range is the middle half of all ${C.n} scored trades since 2024.${since ? ` The ${since} trades made since Nov 4 are not on the list yet.` : ''}</p></div>`;
+  }
+  let lastSummary = '', tmode = 'build', sheet = null;
+  const anyGiven = () => ['a', 'b'].some(k => st.give[k].players.length || st.give[k].picks.length);
+  const p0 = x => x >= 0.995 ? '99%+' : x > 0 && x < 0.005 ? '<1%' : Math.round(x * 100) + '%';
+  const rngS = r => { const lo = Math.round(r[0] * 100), hi = Math.round(r[1] * 100); return lo === hi ? lo + '%' : `${lo}–${hi}%`; };
+  const pickWords = ps => { const w = ps.slice().sort((x, y) => x.round - y.round).map(p => ord(p.round)); return w.length === 1 ? `A ${w[0]}-round pick` : `Picks: ${w.join(', ')}`; };
+  const poss = n => n + (/s$/i.test(n) ? "'" : "'s");
+  const giveList = (g, rid) => g.players.map(pid => P[pid].n).concat(g.picks.map(p => '2027 ' + pickLabel(p, rid)));
+  // a before → after row that says better or worse in words
+  function mv(label, before, after, dir) {
+    const c = dir > 0 ? 'up' : dir < 0 ? 'down' : 'flat';
+    return `<div class="orow"><span class="k">${label}</span><span class="ov"><span>${before}</span><span aria-hidden="true">→</span><span class="sr">to</span><b class="${c}">${after}</b>${dir ? `<span class="tagw ${c}">${dir > 0 ? 'better' : 'worse'}</span>` : ''}</span></div>`;
+  }
+  function summaryCard(result) {
+    const line = k => {
+      const rid = st[k], g = st.give[k];
+      const chips = g.players.map(pid => `<span class="chip">${esc(P[pid].n)}</span>`)
+        .concat(g.picks.map(p => result ? `<button type="button" class="chip pickchip" data-sheet="${k}:${pickKey(p)}" aria-expanded="${!!sheet && sheet.k === k && pickKey(sheet.pick) === pickKey(p)}">2027 ${esc(pickLabel(p, rid))}</button>` : `<span class="chip">2027 ${esc(pickLabel(p, rid))}</span>`)).join('');
+      return `<div class="gives"><span class="lbl">${esc(T[rid].team)} gives</span>${chips || '<span class="note">nothing yet</span>'}</div>`;
+    };
+    const hasPick = st.give.a.picks.length + st.give.b.picks.length > 0;
+    return `<div class="card">${line('a')}${line('b')}
+      ${result ? `${hasPick ? '<p class="note">Tap a pick to see what it changes next year.</p>' : ''}<div class="row"><button type="button" class="btn quiet" id="change">Change the trade</button></div>`
+        : `<div class="row"><button type="button" class="btn primary" id="analyze"${anyGiven() ? '' : ' disabled'}>Analyze this trade</button>${anyGiven() ? '<button type="button" class="btn quiet" id="clear">Clear</button>' : ''}</div>`}</div>`;
+  }
+  function sheetHTML() {
+    if (!sheet) return '';
+    const from = st[sheet.k], to = st[sheet.k === 'a' ? 'b' : 'a'], e = E.pickEffect(from, to, sheet.pick), pv = e.pick;
+    const part = (x, title, word, good) => {
+      const d = x.next[1] - x.next[0], gap = Math.abs(d) - pv;
+      const why = Math.abs(gap) < 0.05 ? '' : `<p class="note">${pv.toFixed(1)} for the pick, ${gap < 0 ? 'less' : 'plus'} ${Math.abs(gap).toFixed(1)} from what the move does to its best keeper plan under the limit of 3 assets.</p>`;
+      const row = (label, key, up) => { const s0 = rngS(x.ny[key][0]), s1 = rngS(x.ny[key][1]), m = x.ny[key + 'Mid']; return mv(label, s0, s1, s0 === s1 ? 0 : (m[1] > m[0]) === up ? 1 : -1); };
+      return `<div class="team-out"><div class="row"><span class="group">${esc(title)}</span><span class="pill est">Estimate</span></div>
+        <div class="orow"><span class="k">${word}</span><span class="ov"><b class="${good ? 'up' : 'down'}">${sgn(d) || '0.0'} a week</b></span></div>${why}
+        ${mv('Picks + keepers, rank of 12', ord(x.rank[0]), ord(x.rank[1]), Math.sign(x.rank[0] - x.rank[1]))}
+        ${row('Title', 'title', true)}${row('Playoffs', 'po', true)}${row('Last place', 'last', false)}</div>`;
+    };
+    const rounds = Array.from({ length: 15 }, (_, i) => i + 1).map(r => `<div class="${r === sheet.pick.round ? 'on' : ''}"><span>${ord(r)}</span><b>${E.roundVal(r).toFixed(1)}</b></div>`).join('');
+    return `<div class="card sheet" id="sheet"><div class="rt-head"><div><h3>${esc(poss(T[sheet.pick.orig].team))} 2027 ${ord(sheet.pick.round)}</h3><p class="note">What moving it changes next year, from where each team stands today.</p></div><button type="button" class="btn quiet" id="sheet-close">Close</button></div>
+      <div class="outcome">${part(e.to, `${T[to].team} gets it`, 'Added to its lineup', true)}${part(e.from, `${T[from].team} gives it up`, 'Taken from its lineup', false)}</div>
+      <div><span class="group">Every round, points a week</span><div class="rounds">${rounds}</div></div>
+      <ul class="note" style="margin:0;padding-left:20px;display:grid;gap:4px"><li>Next year's odds start from the picks and keepers every team holds today.</li><li>Draft order is drawn at the Rumble, so these numbers use the middle of the round.</li><li>These are estimates. They get checked against the 2027 draft.</li></ul></div>`;
+  }
+  function teamCard(k, r) {
+    const rid = st[k], o = k === 'a' ? 'b' : 'a', t = T[rid], v = r.view[k], get = giveList(st.give[o], st[o]);
+    const rules = k === 'a' ? r.rulesA : r.rulesB;
+    // this year: only the rows that move by a rounded point
+    let now = '<p class="note">The regular season is over, so nothing here moves.</p>';
+    if (v.title) {
+      const rows = [['Title', v.title, true], ['Playoffs', v.po, true], ['Last place', v.last, false]];
+      const moved = rows.filter(x => Math.round(x[1][0] * 100) !== Math.round(x[1][1] * 100)), still = rows.filter(x => !moved.includes(x));
+      now = moved.map(x => mv(x[0], p0(x[1][0]), p0(x[1][1]), (x[1][1] > x[1][0]) === x[2] ? 1 : -1)).join('')
+        + (still.length ? `<p class="note">No change: ${still.map(x => `${x[0].toLowerCase()} ${p0(x[1][0])}`).join(', ')}</p>` : '');
+    }
+    const ny = v.ny, rankSame = v.nextRank[0] === v.nextRank[1];
+    let next;
+    if (ny.same) next = `<p class="note">No change next year: picks and keepers stay ${ord(v.nextRank[0])} of 12.</p>`;
+    else {
+      const rows = [['Title', 'title', true], ['Playoffs', 'po', true], ['Last place', 'last', false]].map(x => {
+        const s0 = rngS(ny[x[1]][0]), s1 = rngS(ny[x[1]][1]), m = ny[x[1] + 'Mid'];
+        return mv(x[0], s0, s1, s0 === s1 ? 0 : (m[1] > m[0]) === x[2] ? 1 : -1);
+      }).join('');
+      next = mv('Picks + keepers, rank of 12', ord(v.nextRank[0]), ord(v.nextRank[1]), rankSame ? 0 : Math.sign(v.nextRank[0] - v.nextRank[1])) + rows;
+    }
+    const flags = rules.length ? `<div class="flags">${rules.map(x => `<div class="${x.lvl}">${esc(x.text)}</div>`).join('')}</div>` : '';
+    return `<div class="card tcard"><div><h3>${esc(t.team)}</h3><p class="note">${rec(t).replace(/-/g, '–')} · gets ${esc(get.join(', ') || 'nothing')}</p></div>
+      <div class="grp"><span class="group">This year</span>${now}</div>
+      <div class="grp"><div class="row"><span class="group">Next year</span><span class="pill est">Estimate</span></div>${next}</div>
+      ${flags}</div>`;
+  }
+  function resultHTML() {
+    const ga = st.give.a, gb = st.give.b;
+    const r = E.evaluate(st.a, st.b, ga, gb), c = r.call, v = r.verdict;
+    // the two things being swapped, in the same unit
+    const lines = [];
+    [['a', 'b'], ['b', 'a']].forEach(([k, o]) => {
+      const got = st.give[o], w = r.view[k], d = w.lineup[1] - w.lineup[0];
+      if (got.players.length) lines.push([`${got.players.map(pid => P[pid].n.split(' ').slice(1).join(' ') || P[pid].n).join(' and ')}, in ${poss(T[st[k]].team)} lineup this year${st.give[k].players.length ? ' (after what it gives up)' : ''}`, `${sgn(d) || '0.0'} a week`]);
+    });
+    [['a', 'b'], ['b', 'a']].forEach(([k, o]) => {
+      const got = st.give[o];
+      if (got.picks.length) lines.push([`${pickWords(got.picks)}, in any lineup next year`, `+${got.picks.reduce((n, p) => n + E.roundVal(p.round), 0).toFixed(1)} a week`]);
+    });
+    const R = E.callRule, third = 'a third';
+    const odds = k => { const w = r.view[k], f = (lab, x) => x ? `${lab} ${p0(x[0])} to ${p0(x[1])}` : ''; return `${T[st[k]].team}: this year ${[f('title', w.title), f('playoffs', w.po), f('last place', w.last)].filter(Boolean).join(', ') || 'no change'}; next year (estimate) picks and keepers ${ord(w.nextRank[0])} to ${ord(w.nextRank[1])} of 12, title ${rngS(w.ny.title[0])} to ${rngS(w.ny.title[1])}, playoffs ${rngS(w.ny.po[0])} to ${rngS(w.ny.po[1])}, last place ${rngS(w.ny.last[0])} to ${rngS(w.ny.last[1])}`; };
+    lastSummary = [`Purple Helm Trade Analyzer: ${c.band}`, `${T[st.a].team} gives ${giveList(ga, st.a).join(', ') || 'nothing'}`, `${T[st.b].team} gives ${giveList(gb, st.b).join(', ') || 'nothing'}`, c.text, odds('a'), odds('b')]
+      .concat(r.rulesA.concat(r.rulesB).map(x => '- ' + x.text)).join('\n');
+    const base = baselineHTML(r, ga, gb);
+    return `${summaryCard(true)}${sheetHTML()}
+      <div class="card verdict ${c.tone}"><div><span class="band ${c.tone}">${esc(c.band)}</span></div><p>${esc(c.text)}</p>
+        ${lines.length ? `<div class="grp vlines">${lines.map(l => `<div class="orow"><span class="k">${esc(l[0])}</span><span class="ov"><b class="flat">${l[1]}</b></span></div>`).join('')}</div>` : ''}</div>
+      <div class="outcome">${teamCard('a', r)}${teamCard('b', r)}</div>
+      <div class="card dd">
+        <details><summary>Show the math</summary><p>${esc(v.text)}</p>${v.note ? `<p class="note">${esc(v.note)}</p>` : ''}<div class="outcome">${teamOut(r.a, ga, gb, r.view.a)}${teamOut(r.b, gb, ga, r.view.b)}</div></details>
+        <details><summary>Past league trades like this</summary>${base || '<p class="note">Nothing to compare this one with.</p>'}</details>
+        <details><summary>What the verdicts mean</summary><ul class="prose-list">
+          <li><b>Works for both:</b> each team gets better where it is trying to, and neither gets much more than the other.</li>
+          <li><b>Favors a team:</b> one team comes out clearly ahead. The other may still gain a little, hold even, or lose.</li>
+          <li><b>Bad for both:</b> both teams end up worse off.</li>
+          <li><b>Too close to call:</b> the difference is smaller than the simulation can measure.</li></ul>
+          <p class="note">How it's scored: a team's change is its title chance, plus ${third} of its playoff chance, less ${third} of its last-place chance, this year and next year added together. Less than ${Math.round(R.CALL_FLAT * 100)} point either way counts as no real change. It "works for both" when both teams gain and the smaller gain is at least ${third} of the larger. The verdict can't know what an owner is going for, so a rebuilding team may like a trade this calls even or worse.</p></details>
+        <details><summary>How the estimates are made</summary><ul class="prose-list">
+          <li><b>This year</b> reruns the rest of the season with the new lineups, using Sleeper's weekly projections. It has not been checked against results yet, so treat a one or two point move as rough.</li>
+          <li><b>Next year</b> starts every team from the 2027 picks and keepers it holds today and plays a 14-game season against the other eleven. Nobody knows yet how drafts, waivers and injuries will go, so that unknown is run at three sizes and the answers are shown as a range.</li>
+          <li>The range covers that unknown. It does not cover the pick and keeper values being off, and it knows nothing about a team beyond its picks and keepers. A team that is strong this year can rank low for next year for that reason alone.</li>
+          <li>These numbers move whenever rosters, picks or projections change, and will sharpen when 2027 draft rankings come out.</li></ul></details>
+      </div>
+      <div class="row"><button type="button" class="btn" id="copy">Copy summary</button><button type="button" class="btn quiet" id="clear">Clear trade</button><span class="note" id="copied" role="status"></span></div>`;
+  }
+  function renderTrade() {
+    const dl = D.nfl_week > D.deadline ? `The Week ${D.deadline} trade deadline has passed. Trades open again after the title game.` : `Trade deadline: Week ${D.deadline}. During the season only players and 2027 picks can be traded.`;
+    if (tmode === 'result' && !anyGiven()) tmode = 'build';
+    $('#view-trade-analyzer').innerHTML = `
+      <div><h2>Trade Analyzer</h2><p class="lede">${tmode === 'result' ? "What the trade does to each team's chances, this year and next." : `Pick two teams, tap what each gives, then analyze. ${dl}`}</p></div>
+      ${tmode === 'result' ? `<div id="result" style="display:grid;gap:16px">${resultHTML()}</div>`
+        : `${summaryCard(false)}<div class="sides">${sideHTML('a')}${sideHTML('b')}</div><div class="row"><button type="button" class="btn primary" id="analyze2"${anyGiven() ? '' : ' disabled'}>Analyze this trade</button></div>`}`;
+  }
+  $('#view-trade-analyzer').addEventListener('change', e => {
+    const k = e.target.dataset.side; if (!k || e.target.tagName !== 'SELECT') return;
+    const other = k === 'a' ? 'b' : 'a', v = +e.target.value;
+    if (v === st[other]) { st[other] = st[k]; st.give[other] = { players: [], picks: [] }; }
+    st[k] = v; st.give[k] = { players: [], picks: [] };
+    store.set('teams', { a: st.a, b: st.b });
+    renderTrade();
+  });
+  $('#view-trade-analyzer').addEventListener('click', e => {
+    const b = e.target.closest('button'); if (!b) return;
+    const top = () => { try { window.scrollTo(0, 0); } catch (err) {} };
+    if (b.id === 'clear') { st.give = { a: { players: [], picks: [] }, b: { players: [], picks: [] } }; tmode = 'build'; sheet = null; renderTrade(); top(); return; }
+    if (b.id === 'analyze' || b.id === 'analyze2') { tmode = 'result'; sheet = null; renderTrade(); top(); return; }
+    if (b.id === 'change') { tmode = 'build'; sheet = null; renderTrade(); top(); return; }
+    if (b.id === 'sheet-close') { sheet = null; renderTrade(); return; }
+    if (b.dataset.sheet) {
+      const [k, r, o] = b.dataset.sheet.split(':'), pick = { round: +r, orig: +o };
+      sheet = sheet && sheet.k === k && pickKey(sheet.pick) === pickKey(pick) ? null : { k, pick };
+      renderTrade();
+      const el = $('#sheet'); if (el && el.scrollIntoView) el.scrollIntoView({ block: 'nearest' });
+      return;
+    }
+    if (b.id === 'copy') {
+      const done = ok => { const el = $('#copied'); if (el) el.textContent = ok ? 'Copied.' : 'Copying is blocked here. Select the text above instead.'; };
+      try { navigator.clipboard.writeText(lastSummary).then(() => done(true), () => done(false)); } catch (err) { done(false); }
+      return;
+    }
+    const k = b.dataset.side; if (!k) return;
+    const g = st.give[k];
+    if (b.dataset.player) { const i = g.players.indexOf(b.dataset.player); if (i >= 0) g.players.splice(i, 1); else g.players.push(b.dataset.player); }
+    if (b.dataset.pick) {
+      const [r, o] = b.dataset.pick.split(':').map(Number), i = g.picks.findIndex(p => p.round === r && p.orig === o);
+      if (i >= 0) g.picks.splice(i, 1); else g.picks.push({ round: r, orig: o });
+    }
+    const box = b.closest('.players'), topY = box ? box.scrollTop : 0, side = b.dataset.side;
+    renderTrade();
+    if (box) { const nb = document.querySelectorAll('.players')[side === 'a' ? 0 : 1]; if (nb) nb.scrollTop = topY; }
+  });
+
+  // ---------- keepers
+  let keepTeam = (function () { const s = store.get('keeper-team'); return s && T[s] ? s : 'all'; })();
+  const keepOpen = new Set();
+  // market rank as a draft slot: 15 -> 2.03
+  const adp = rank => rank > 15 * D.teams.length ? 'undrafted' : `${Math.ceil(rank / D.teams.length)}.${String((rank - 1) % D.teams.length + 1).padStart(2, '0')}`;
+  function renderKeepers() {
+    const shown = keepTeam === 'all' ? teams : teams.filter(t => t.rid === keepTeam);
+    const opts = `<option value="all"${keepTeam === 'all' ? ' selected' : ''}>All teams</option>`
+      + teams.map(x => `<option value="${x.rid}"${x.rid === keepTeam ? ' selected' : ''}>${esc(x.team)} (${esc(x.user)})</option>`).join('');
+    const cards = shown.map(t => {
+      const kb = E.keeperBoard(t.rid);
+      const open = keepTeam !== 'all' || keepOpen.has(t.rid), more = Math.max(0, kb.rows.length - 2);
+      const rows = kb.rows.slice(0, open ? kb.rows.length : 2).map(r => `<tr class="${r.best ? 'best' : ''}">
+        <td><span class="tn">${esc(r.name)}</span> ${r.best ? '<span class="pill">Best pair</span>' : ''}${r.rule7 ? ' <span class="pill flag">Rule 7?</span>' : ''}<span class="sub">${r.pos}${r.cost !== r.base && r.cost != null ? ` · no ${ord(r.base)} to pay with` : ''}</span></td>
+        <td>${r.cost == null ? 'none' : ord(r.cost)}</td><td>${r.yrs}</td><td>${adp(r.rank)}</td>
+        <td class="${r.value == null ? 'flat' : cls(r.value)}">${r.value == null ? '' : sgn(r.value)}</td></tr>`).join('');
+      const picks = [];
+      if (kb.missing.length) picks.push('traded away: ' + kb.missing.map(ord).join(', '));
+      if (kb.acquired.length) picks.push('acquired: ' + kb.acquired.map(a => `${ord(a.round)} from ${T[a.orig].team}`).join(', '));
+      const toggle = keepTeam === 'all' && more ? `<button class="btn quiet" data-kexp="${t.rid}" aria-expanded="${open}">${open ? 'Show the top two only' : `Show all ${kb.rows.length} options`}</button>` : '';
+      return `<div class="card"><div><h3>${keepTeam === 'all' && more ? `<a href="#keepers" class="kname" data-kexp="${t.rid}">${esc(t.team)}</a>` : esc(t.team)}</h3><p class="note">${esc(t.user)} · 2027 picks ${esc(picks.length ? picks.join('; ') : 'all its own')}</p></div>
+        <div class="scroll"><table><thead><tr><th>Player</th><th>Cost</th><th>Years</th><th>Proj. ADP</th><th>Value</th></tr></thead><tbody>${rows || '<tr><td colspan="5">No keepable players.</td></tr>'}</tbody></table></div>
+        ${kb.notes.map(n => `<p class="note">${n.kind === 'none' ? '' : '<b>Why not the two highest values:</b> '}${esc(n.text)}</p>`).join('')}
+        ${toggle}</div>`;
+    }).join('');
+    $('#view-keepers').innerHTML = `
+      <div><h2>2027 keepers</h2><p class="lede">Each team's top two keeper options, with the best legal pair marked. Tap a team to see every player it could keep. When the pair isn't simply the two highest values, the reason is under the table. Rosters change, so this moves every week until keepers lock.</p></div>
+      <label class="field" for="keeper-team">Show<select id="keeper-team">${opts}</select></label>
+      <div class="card prose"><ul>
+        <li><b>Cost</b> is the 2027 round this team would pay to keep him.</li>
+        <li><b>Years</b> is how many seasons he can still be kept, 2027 included.</li>
+        <li><b>Projected ADP</b> is where the market has him going in next year's draft, written round.pick for a 12-team draft: 2.03 is the third pick of the second round.</li>
+        <li><b>Value</b> is points a week he adds over simply using that pick in the draft. Below zero means the pick is worth more than the player.</li>
+      </ul></div>
+      <div class="kgrid">${cards}</div>
+      <p class="note">Rule 7? marks a player with no projection left this season. A season-ending injury makes him ineligible. Next year's draft position is an estimate from current market values and will be replaced by real draft rankings in the summer.</p>
+      ${pickBoard()}`;
+  }
+
+  $('#view-keepers').addEventListener('click', e => {
+    const b = e.target.closest('[data-kexp]'); if (!b) return;
+    e.preventDefault();
+    const r = +b.dataset.kexp; if (keepOpen.has(r)) keepOpen.delete(r); else keepOpen.add(r);
+    renderKeepers();
+    const f = $(`button[data-kexp="${r}"]`); if (f) f.focus({ preventScroll: true });
+  });
+  $('#view-keepers').addEventListener('change', e => {
+    if (e.target.id !== 'keeper-team') return;
+    keepTeam = e.target.value === 'all' ? 'all' : +e.target.value;
+    store.set('keeper-team', keepTeam);
+    renderKeepers();
+    const s = $('#keeper-team'); if (s) s.focus();
+  });
+
+  // ---------- how it works
+  function renderHow() {
+    const rounds = Array.from({ length: 15 }, (_, i) => i + 1).map(r => `<div><span>${ord(r)}</span><b>${E.roundVal(r).toFixed(1)}</b></div>`).join('');
+    const B = E.bands;
+    const K = D.card;
+    $('#view-how-it-works').innerHTML = `
+      <div><h2>How it works</h2><p class="lede">One unit for everything: points a week added to a starting lineup.</p></div>
+      <div class="card prose"><h3>This season</h3>
+        <p>A player is worth what he adds to the best lineup his new team can start, not his raw points. An 18-point receiver who replaces a 13-point flex adds 5. The analyzer builds each team's best lineup for every remaining week from Sleeper's projections, in this league's scoring, before and after the trade. Byes and injuries are in those projections.</p></div>
+      <div class="card prose"><h3>Next season: what a 2027 pick is worth</h3>
+        <p>Draft order is decided at the Rumble, so a traded pick could land anywhere in its round. Each round gets one value: what players taken in that round of this league's 2026 draft have been worth over a waiver-wire replacement, scaled to starting-lineup points.</p>
+        <div class="rounds">${rounds}</div>
+        <p>A team that ends up with an extra pick loses its last-round pick, and a team short a pick gets a 16th-rounder, as the rules say.</p></div>
+      <div class="card prose"><h3>Next season: what a keeper is worth</h3>
+        <p>A keeper is worth the round he would be drafted in minus the round he costs, on the same table. The analyzer finds each team's best legal plan before and after a trade: at most two keepers, at most three assets counting acquired picks, same-round keepers pushed a round earlier, and a missing cost-round pick moving the cost up a round.</p></div>
+      <div class="card prose"><h3>Reading a trade</h3>
+        <ul>
+          <li><b>Before and after.</b> Each team's projected starting lineup, where that ranks among the ${D.teams.length} teams, and its projected final record, with and without the trade. The record is the standings tab's number, rerun with the trade and rounded to whole wins, with the range that holds the middle 80% of simulated seasons. With only a few games left, one trade often leaves the whole-number record where it was. Next season is ranked on picks and keepers alone, because team strength barely carries from one year to the next.</li>
+          <li><b>Equal value.</b> Points a week times the games they count for. This season, Weeks ${D.weeks[0]}–${D.reg_end} count in full and the bracket weeks count by the chance the team is playing in one. Next season counts ${B.NEXT_GAMES} regular-season games. When a team buys points now with picks, the analyzer says which pick those points equal. Within 10% either way is equal value; outside that the buyer is paying a premium or getting a discount.</li>
+          <li><b>Other trades.</b> Players only or picks only: each team's total points for both seasons are compared. Within ${B.GAP_EVEN} points of each other is even, within ${B.GAP_LEAN} leans, beyond that is lopsided.</li>
+          <li><b>The league scale.</b> For trades with a player and a pick, the chart shows the points the buyer gets for every 100 the seller gets, by a rule fixed on Nov 4, 2026 and applied the same way to every league trade since 2024. The middle half of those ${K.n} trades scored ${Math.round(K.band[0])} to ${Math.round(K.band[1])}. It uses points per game so far, because that is the only way past trades can be scored, so it does not see injuries. Its pick values had a 5th above a 4th, so here rounds that are out of order share their average.</li>
+          <li><b>Simulated odds.</b> First-place and last-place odds come from ${E.NSIM.toLocaleString('en-US')} simulated finishes, run with today's rosters and again on the same random draws with the trade made. They have not been checked against results, so treat them as rough.</li>
+        </ul></div>
+      ${D.scen ? `<div class="card prose"><h3>Playoff scenarios</h3>
+        <ul>
+          <li><b>Most likely path.</b> Take every simulated season where a team ended up in the playoffs, or in the Toilet Bowl. Its path is the record it had most often in those seasons, and the team it most often traded places with. It is the most common route, not the only one, and the table under each team gives the chance at every finish.</li>
+          <li><b>Pick the winners.</b> A game you pick comes out that way in every simulated season. Everything you leave alone is still simulated. Ties in record go to points for, so the scores of a picked game are redrawn to fit the result, and a team picked to win as an underdog is treated as a little better than projected in its other games.</li>
+          <li><b>In, Out and Safe</b> appear only when the records settle it whatever else happens. Anything short of that stays a percentage.</li>
+          <li>These percentages come from the same simulation as the standings, and it has not been checked against results yet. Read them as rough.</li>
+        </ul></div>` : ''}
+      ${D.hist ? `<div class="card prose"><h3>Home page</h3>
+        <ul>
+          <li><b>Week-by-week charts.</b> Nothing saved the odds each week, so earlier weeks are rebuilt. Each point reruns the season from that week's real records and rosters. A player counts at his projection for the next game at the time, so an injury that came later isn't known early. The last point is today's number. Read the shape of a line, not the exact value.</li>
+          <li><b>This week's biggest game</b> is the game whose result moves the playoff and Toilet Bowl chances the most, added up for the two teams playing it.</li>
+        </ul></div>` : ''}
+      <div class="card prose"><h3>What it can't see</h3>
+        <ul>
+          <li>Projections miss. Treat a gap under a point a week as a tie.</li>
+          <li>Next year's draft position comes from FantasyCalc's public market values, half redraft and half dynasty. It is an estimate until real 2027 rankings exist.</li>
+          <li>Two rulings are still with the commissioner: what a keeper costs when the next round up is also gone, and whether an acquired pick spent on a keeper still counts toward the three-asset limit. The analyzer says so when a trade depends on either.</li>
+          <li>The data refreshes on a schedule, about once an hour and more often while games are on. The time of the last refresh is shown at the top.</li>
+        </ul>
+        <p class="note">Sources: the Sleeper API for rosters, picks, drafts and projections; FantasyCalc for market values. Team scoring noise of ${D.weekly_sd} points a week is from league history.</p></div>`;
+  }
+
+  // ---------- routing
+  const VIEWS = ['home', 'standings', 'playoff-scenarios', 'trade-analyzer', 'keepers', 'rules', 'how-it-works'];
+  function show(v) {
+    if (v === 'trade-judge') v = 'trade-analyzer';
+    if (!VIEWS.includes(v)) v = 'home';
+    VIEWS.forEach(x => { $('#view-' + x).classList.toggle('on', x === v); $('#tab-' + x).setAttribute('aria-selected', String(x === v)); });
+    $('#nav-select').value = v;
+    if (v === 'home') drawCharts();                           // the charts size themselves to the page, so draw once it is showing
+  }
+  const go = v => { show(v); try { location.hash = v; } catch (err) {} try { window.scrollTo(0, 0); } catch (err) {} };
+  $('nav.tabs').addEventListener('click', e => { const b = e.target.closest('.tab'); if (b) go(b.dataset.view); });
+  // a magic or shitty number opens that team's card on the scenarios page (and doesn't fold the standings row open)
+  $('#view-standings').addEventListener('click', e => {
+    const a = e.target.closest('a[data-scen-team]'); if (!a) return;
+    e.preventDefault();
+    scenTeam = +a.dataset.scenTeam; scenView = 'paths'; store.set('scen-team', scenTeam); store.set('scen-view', scenView);
+    renderScen(); go('playoff-scenarios');
+  });
+  $('#nav-select').addEventListener('change', e => go(e.target.value));
+  $('#rules-lineup').textContent = `Starters: ${['QB', 'RB', 'WR', 'TE'].map(p => `${D.slots[p]} ${p}`).join(', ')}, ${D.n_flex} FLEX (RB/WR/TE), ${D.slots.DEF} DEF. Rosters hold ${D.roster_max} players, and the draft is 15 rounds.`;
+  window.addEventListener('hashchange', () => show(location.hash.slice(1)));
+  renderHome(); renderStandings(); renderScen(); renderTrade(); renderKeepers(); renderHow();
+  show(location.hash.slice(1));
+})();
+</script>
+</body>
+</html>

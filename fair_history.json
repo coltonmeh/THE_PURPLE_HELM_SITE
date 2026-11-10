@@ -1,0 +1,125 @@
+{
+ "source": "Purple Helm fairness rule, registered Nov 4 2026 (RULE.md); range and past-trade scores as computed then",
+ "band": [
+  44.7,
+  90.3
+ ],
+ "median": 55.1,
+ "n": 10,
+ "not_scored": [
+  "Dart to nickgbell (2026 preseason): no games played yet",
+  "nickgbell and sekbo swap of 7ths and 8ths (2026): no players"
+ ],
+ "trades": [
+  {
+   "year": 2024,
+   "week": 6,
+   "players": "St. Brown",
+   "buyer": "nickgbell",
+   "seller": "RxDangles19",
+   "paid": "a 3rd",
+   "score": 44.5,
+   "buyer_pts": 27.6,
+   "seller_pts": 61.9
+  },
+  {
+   "year": 2024,
+   "week": 9,
+   "players": "Kyren Williams + Harrison Jr.",
+   "buyer": "nickgbell",
+   "seller": "Twinfan01",
+   "paid": "a 2nd, with Doubs coming back",
+   "score": 70.1,
+   "buyer_pts": 59.2,
+   "seller_pts": 84.5
+  },
+  {
+   "year": 2024,
+   "week": 9,
+   "players": "McLaurin",
+   "buyer": "micahboom",
+   "seller": "RxDangles19",
+   "paid": "a 5th",
+   "score": 59.3,
+   "buyer_pts": 28.7,
+   "seller_pts": 48.4
+  },
+  {
+   "year": 2025,
+   "week": 7,
+   "players": "Jeanty",
+   "buyer": "sekbo",
+   "seller": "nickgbell",
+   "paid": "a 1st",
+   "score": 50.8,
+   "buyer_pts": 55.3,
+   "seller_pts": 108.8
+  },
+  {
+   "year": 2025,
+   "week": 8,
+   "players": "Jacobs + Prescott",
+   "buyer": "Uithoven",
+   "seller": "ericdahlin14",
+   "paid": "a 1st, with McNichols coming back",
+   "score": 108.7,
+   "buyer_pts": 118.2,
+   "seller_pts": 108.8
+  },
+  {
+   "year": 2025,
+   "week": 8,
+   "players": "Evans",
+   "buyer": "topher057",
+   "seller": "nickgbell",
+   "paid": "a 4th",
+   "score": 0.0,
+   "buyer_pts": 0.0,
+   "seller_pts": 46.8
+  },
+  {
+   "year": 2025,
+   "week": 12,
+   "players": "Lamb",
+   "buyer": "micahboom",
+   "seller": "Twinfan01",
+   "paid": "a 2nd",
+   "score": 45.4,
+   "buyer_pts": 29.7,
+   "seller_pts": 65.5
+  },
+  {
+   "year": 2026,
+   "week": 3,
+   "players": "Gibbs + Egbuka",
+   "buyer": "nickgbell",
+   "seller": "Scottie234",
+   "paid": "Hampton, Boston and a 3rd",
+   "score": 109.1,
+   "buyer_pts": 321.6,
+   "seller_pts": 294.8
+  },
+  {
+   "year": 2026,
+   "week": 5,
+   "players": "Nabers",
+   "buyer": "nickgbell",
+   "seller": "sekbo",
+   "paid": "Addison, Sadiq and a 4th, with a 6th coming back",
+   "score": 27.9,
+   "buyer_pts": 37.9,
+   "seller_pts": 136.0
+  },
+  {
+   "year": 2026,
+   "week": 6,
+   "players": "St. Brown + Kyren Williams",
+   "buyer": "Uithoven",
+   "seller": "cdpetey10",
+   "paid": "a 1st and a 2nd",
+   "score": 97.0,
+   "buyer_pts": 184.6,
+   "seller_pts": 190.3
+  }
+ ]
+}
