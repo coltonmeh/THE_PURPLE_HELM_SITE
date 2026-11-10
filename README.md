@@ -2,7 +2,7 @@
 
 The website for The Purple Helm, a 12-team keeper fantasy football league on Sleeper. It is one web page, rebuilt on a schedule and published with GitHub Pages:
 
-**https://coltonmeh.github.io/THE_PURPLE_HELM_SITE/**
+**https://thepurplehelm.com**
 
 ## What is on it
 
