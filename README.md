@@ -15,6 +15,8 @@ The website for The Purple Helm, a 12-team keeper fantasy football league on Sle
 - **Rules:** the league rules, copied from the league's rules doc.
 - **How it works:** the method, in plain words.
 
+The site has a dark and a light mode. It follows the device's setting until someone uses the switch in the header, and then remembers their pick on that device. Each banner in `assets/` has a `-light` twin.
+
 ## Where the numbers come from
 
 Only public inputs: the Sleeper API (rosters, picks, drafts, scores, weekly projections), FantasyCalc's public player values (to estimate 2027 draft position), and `fair_history.json` (past league trades scored by one fixed rule). The odds come from simulations built on Sleeper's projections. They have not been checked against results yet, and the site says so.
