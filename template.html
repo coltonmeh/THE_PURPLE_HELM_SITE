@@ -962,6 +962,8 @@ __ENGINE__
       return `<div class="gives"><span class="lbl">${esc(T[rid].team)} gives</span>${chips || '<span class="note">nothing yet</span>'}</div>`;
     };
     const hasPick = st.give.a.picks.length + st.give.b.picks.length > 0;
+    // while building, each team's own card below already lists what it gives, so the top is just the button
+    if (!result) return `<div class="row"><button type="button" class="btn primary" id="analyze"${anyGiven() ? '' : ' disabled'}>Analyze this trade</button>${anyGiven() ? '<button type="button" class="btn quiet" id="clear">Clear</button>' : ''}</div>`;
     return `<div class="card">${line('a')}${line('b')}
       ${result ? `${hasPick ? '<p class="note">Tap a pick to see what it changes next year.</p>' : ''}<div class="row"><button type="button" class="btn quiet" id="change">Change the trade</button></div>`
         : `<div class="row"><button type="button" class="btn primary" id="analyze"${anyGiven() ? '' : ' disabled'}>Analyze this trade</button>${anyGiven() ? '<button type="button" class="btn quiet" id="clear">Clear</button>' : ''}</div>`}</div>`;
