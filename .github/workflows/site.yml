@@ -10,7 +10,7 @@ on:
     - cron: "*/20 0-5 * * 1,2,5"   # Sunday, Monday and Thursday night games (UTC)
 
 permissions:
-  contents: read
+  contents: write                  # only for the odds log, which is committed to its own branch
   pages: write
   id-token: write
 
@@ -42,6 +42,17 @@ jobs:
           node-version: "22"
       - name: Check the numbers before publishing
         run: PH_SOFT=1 node test_scen.js
+      # One line a day on the odds-log branch, so the odds can be scored against results later. Never blocks the publish.
+      - name: Save today's odds
+        continue-on-error: true
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          if git fetch origin odds-log:odds-log 2>/dev/null; then git worktree add _log odds-log; else git worktree add --orphan -b odds-log _log; fi
+          python save_snapshot.py _log/odds.jsonl
+          cd _log
+          git add odds.jsonl
+          git diff --cached --quiet || (git commit -m "Odds for $(TZ=America/Chicago date +%F)" && git push origin odds-log)
       - name: Collect the files to publish
         run: |
           mkdir _site

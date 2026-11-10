@@ -5,3 +5,4 @@ index.html
 __pycache__/
 *.bak*
 _site/
+_log/

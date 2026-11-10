@@ -15,6 +15,8 @@ The website for The Purple Helm, a 12-team keeper fantasy football league on Sle
 - **Rules:** the league rules, copied from the league's rules doc.
 - **How it works:** the method, in plain words.
 
+A visitor can follow a team (saved on their device only, no team by default), which opens the other pages on that team. Playoff-scenario picks can be shared as a link (`#playoff-scenarios/p=...`); a link stops working once a new week's results are in.
+
 The site has a dark and a light mode. It follows the device's setting until someone uses the switch in the header, and then remembers their pick on that device. Each banner in `assets/` has a `-light` twin.
 
 ## Where the numbers come from
@@ -53,4 +55,5 @@ node test_scen.js        # optional
 - Week-by-week odds before November 10, 2026 are rebuilt from each week's records and rosters, not recorded at the time.
 - The Hall of Champions starts in 2022, when the league moved to Sleeper. Earlier champions would have to be added by hand.
 - The record book counts regular-season games only (Weeks 1-14). Playoff and Toilet Bowl games are used for the season results, not for records.
-- Saving each day's published odds, so they can be scored against results later, is not built yet.
+- The site's odds have not been scored against results. Since November 10, 2026 the build saves one snapshot of the published odds a day to the `odds-log` branch (`save_snapshot.py`), so that can be done after the season. One season of 12 teams will be thin evidence; the weekly game win chances give more to score.
+- "What changed" on Home compares rebuilt week-by-week odds, not saved ones. Switch it to the odds log once that covers two weeks.
