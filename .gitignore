@@ -1,5 +1,5 @@
 cache/
-node_modules/
+node_modules
 data.json
 index.html
 __pycache__/
