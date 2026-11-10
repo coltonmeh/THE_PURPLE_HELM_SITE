@@ -48,6 +48,8 @@ node test_scen.js        # optional
 ## Decisions on record
 
 - **Trade verdict rule** (kept as is for now by Colton, Nov 10, 2026). A team's change is its title chance, plus a third of its playoff chance, less a third of its last-place chance, this year and next year added together. Under 1 point either way is no real change. "Works for both" needs both teams to gain with the smaller gain at least a third of the larger; otherwise the trade "favors" whoever is ahead; both losing is "bad for both"; neither moving is "too close to call". The constants are `W_PO`, `W_LAST`, `CALL_FLAT` and `CALL_SHARE` in `engine.js`. The one-third weights and the 1-point floor are judgment, not measured.
+- **No headline verdict on a trade** (Colton, Nov 10, 2026). The result opens with the numbers: what changes hands and each team's chances before and after. Lower down it gives three readings, each on its own yardstick: chances (the rule above), price in points, and past league trades. A good trade calculator gives a manager enough to judge a trade for his own priorities without burying him in data.
+- **No win-now / balanced / rebuild switch** (Colton, Nov 10, 2026). A dial that changes the reading lets anyone get the answer they want.
 
 ## Known gaps
 
