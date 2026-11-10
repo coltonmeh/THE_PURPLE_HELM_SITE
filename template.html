@@ -287,6 +287,12 @@ details[open] summary { margin-bottom: 6px; }
 .flags { background: var(--warn-soft); border-radius: 8px; padding: 8px 12px; font-size: .92rem; display: grid; gap: 6px; }
 .tcard .grp + .grp { border-top: 1px solid var(--line); padding-top: 10px; }
 .vlines { border-top: 1px solid var(--line); padding-top: 10px; gap: 8px; }
+.reads { gap: 0; }
+.reads > div:first-child { padding-bottom: 10px; }
+.read { border-top: 1px solid var(--line); padding: 12px 0; display: grid; gap: 6px; }
+.read:last-child { padding-bottom: 0; }
+.read summary { cursor: pointer; color: var(--helm); font-weight: 600; font-size: .9rem; }
+.read details > * + * { margin-top: 10px; }
 .vlines .orow .k { font-weight: 400; }
 .dd { padding-top: 0; padding-bottom: 0; gap: 0; }
 .dd details { border-bottom: 1px solid var(--line); padding: 0 0 12px; }
@@ -1020,29 +1026,56 @@ __ENGINE__
     });
     const R = E.callRule, third = 'a third';
     const odds = k => { const w = r.view[k], f = (lab, x) => x ? `${lab} ${p0(x[0])} to ${p0(x[1])}` : ''; return `${T[st[k]].team}: this year ${[f('title', w.title), f('playoffs', w.po), f('last place', w.last)].filter(Boolean).join(', ') || 'no change'}; next year (estimate) picks and keepers ${ord(w.nextRank[0])} to ${ord(w.nextRank[1])} of 12, title ${rngS(w.ny.title[0])} to ${rngS(w.ny.title[1])}, playoffs ${rngS(w.ny.po[0])} to ${rngS(w.ny.po[1])}, last place ${rngS(w.ny.last[0])} to ${rngS(w.ny.last[1])}`; };
-    lastSummary = [`Purple Helm Trade Analyzer: ${c.band}`, `${T[st.a].team} gives ${giveList(ga, st.a).join(', ') || 'nothing'}`, `${T[st.b].team} gives ${giveList(gb, st.b).join(', ') || 'nothing'}`, c.text, odds('a'), odds('b')]
-      .concat(r.rulesA.concat(r.rulesB).map(x => '- ' + x.text)).join('\n');
     const base = baselineHTML(r, ga, gb);
+    // three ways to read the same trade, each on its own yardstick; none of them is the headline
+    const K = r.card, C = D.card;
+    let league = null;
+    if (C && K && K.applies && K.score != null) {
+      const zr = { below: `Better for ${T[K.seller.rid].team} than most league trades`, inside: 'In line with how this league has traded', above: `Better for ${T[K.buyer.rid].team} than most league trades` };
+      league = { band: zr[K.zone], text: `${T[K.buyer.rid].team} gets ${K.score > 300 ? 'more than 300' : Math.round(K.score)} points for every 100 ${T[K.seller.rid].team} gets. The middle half of ${C.n} league trades since 2024 scored ${Math.round(C.band[0])} to ${Math.round(C.band[1])}.` };
+    } else if (C) league = { band: 'Not compared', text: 'The league comparison only covers trades with at least one player and one pick.' };
+    const reads = [['Chances', c.band, c.text], ['Price in points', v.band, v.text]].concat(league ? [['Past league trades', league.band, league.text]] : []);
+    lastSummary = ['Purple Helm Trade Analyzer', `${T[st.a].team} gives ${giveList(ga, st.a).join(', ') || 'nothing'}`, `${T[st.b].team} gives ${giveList(gb, st.b).join(', ') || 'nothing'}`, odds('a'), odds('b')]
+      .concat(reads.map(x => `${x[0]}: ${x[1]}. ${x[2]}`))
+      .concat(r.rulesA.concat(r.rulesB).map(x => '- ' + x.text)).concat([pageURL() + '#trade-analyzer/' + encTrade()]).join('\n');
     return `${summaryCard(true)}${sheetHTML()}
-      <div class="card verdict ${c.tone}"><div><span class="band ${c.tone}">${esc(c.band)}</span></div><p>${esc(c.text)}</p>
-        ${lines.length ? `<div class="grp vlines">${lines.map(l => `<div class="orow"><span class="k">${esc(l[0])}</span><span class="ov"><b class="flat">${l[1]}</b></span></div>`).join('')}</div>` : ''}</div>
+      ${lines.length ? `<div class="card"><div><h3>What changes hands</h3><p class="note">Points a week added to a starting lineup.</p></div>
+        <div class="grp">${lines.map(l => `<div class="orow"><span class="k">${esc(l[0])}</span><span class="ov"><b class="flat">${l[1]}</b></span></div>`).join('')}</div></div>` : ''}
       <div class="outcome">${teamCard('a', r)}${teamCard('b', r)}</div>
+      <div class="card reads"><div><h3>Three ways to read it</h3><p class="note">Each uses a different yardstick, so they can disagree. Which one matters depends on what a team is going for.</p></div>
+        <div class="read"><span class="group">1. Chances</span><p><b>${esc(c.band)}.</b> ${esc(c.text)}</p>
+          <details><summary>How this is scored</summary><p class="note">A team's change is its title chance, plus ${third} of its playoff chance, less ${third} of its last-place chance, this year and next year added together. Less than ${Math.round(R.CALL_FLAT * 100)} point either way counts as no real change. It "works for both" when both teams gain and the smaller gain is at least ${third} of the larger. This reading weighs a title most, so a rebuilding team may see the same trade differently.</p></details></div>
+        <div class="read"><span class="group">2. Price in points</span><p><b>${esc(v.band)}.</b> ${esc(v.text)}</p>
+          <details><summary>Show the math</summary>${v.note ? `<p class="note">${esc(v.note)}</p>` : ''}<p class="note">Every point counts the same here, whichever season it lands in. Both teams can come out behind at once: a player adds a different amount to each lineup, and a pick that pays for a keeper is worth more to the team holding that player.</p><div class="outcome">${teamOut(r.a, ga, gb, r.view.a)}${teamOut(r.b, gb, ga, r.view.b)}</div></details></div>
+        ${league ? `<div class="read"><span class="group">3. Past league trades</span><p><b>${esc(league.band)}.</b> ${esc(league.text)}</p>
+          ${K && K.applies && K.score != null ? `<details><summary>See the league trades</summary>${base}</details>` : ''}</div>` : ''}
+      </div>
       <div class="card dd">
-        <details><summary>Show the math</summary><p>${esc(v.text)}</p>${v.note ? `<p class="note">${esc(v.note)}</p>` : ''}<div class="outcome">${teamOut(r.a, ga, gb, r.view.a)}${teamOut(r.b, gb, ga, r.view.b)}</div></details>
-        <details><summary>Past league trades like this</summary>${base || '<p class="note">Nothing to compare this one with.</p>'}</details>
-        <details><summary>What the verdicts mean</summary><ul class="prose-list">
-          <li><b>Works for both:</b> each team gets better where it is trying to, and neither gets much more than the other.</li>
-          <li><b>Favors a team:</b> one team comes out clearly ahead. The other may still gain a little, hold even, or lose.</li>
-          <li><b>Bad for both:</b> both teams end up worse off.</li>
-          <li><b>Too close to call:</b> the difference is smaller than the simulation can measure.</li></ul>
-          <p class="note">How it's scored: a team's change is its title chance, plus ${third} of its playoff chance, less ${third} of its last-place chance, this year and next year added together. Less than ${Math.round(R.CALL_FLAT * 100)} point either way counts as no real change. It "works for both" when both teams gain and the smaller gain is at least ${third} of the larger. The verdict can't know what an owner is going for, so a rebuilding team may like a trade this calls even or worse.</p></details>
         <details><summary>How the estimates are made</summary><ul class="prose-list">
           <li><b>This year</b> reruns the rest of the season with the new lineups, using Sleeper's weekly projections. It has not been checked against results yet, so treat a one or two point move as rough.</li>
           <li><b>Next year</b> starts every team from the 2027 picks and keepers it holds today and plays a 14-game season against the other eleven. Nobody knows yet how drafts, waivers and injuries will go, so that unknown is run at three sizes and the answers are shown as a range.</li>
           <li>The range covers that unknown. It does not cover the pick and keeper values being off, and it knows nothing about a team beyond its picks and keepers. A team that is strong this year can rank low for next year for that reason alone.</li>
           <li>These numbers move whenever rosters, picks or projections change, and will sharpen when 2027 draft rankings come out.</li></ul></details>
       </div>
-      <div class="row"><button type="button" class="btn" id="copy">Copy summary</button><button type="button" class="btn quiet" id="clear">Clear trade</button><span class="note" id="copied" role="status"></span></div>`;
+      ${tradeNote ? `<p class="note"><b>${esc(tradeNote)}</b></p>` : ''}
+      <div class="row"><button type="button" class="btn" id="copy">Copy summary</button><button type="button" class="btn" id="share-trade">Copy a link to this trade</button><button type="button" class="btn quiet" id="clear">Clear trade</button></div>
+      <span class="note" id="copied" role="status"></span>`;
+  }
+  // A link that rebuilds a trade: the two teams, then what each gives. Anything that no longer matches the rosters is dropped.
+  let tradeNote = '';
+  const encTrade = () => 't=' + [st.a, st.b].concat(['a', 'b'].flatMap(k => [st.give[k].players.join(','), st.give[k].picks.map(p => p.round + 'x' + p.orig).join(',')])).join('.');
+  function loadSharedTrade(arg) {
+    const m = /^t=(\d+)\.(\d+)\.([^.]*)\.([^.]*)\.([^.]*)\.([^.]*)$/.exec(arg || ''); if (!m) return;
+    const a = +m[1], b = +m[2]; if (!T[a] || !T[b] || a === b) return;
+    let lost = 0;
+    const side = (rid, ps, ks) => ({
+      players: ps.split(',').filter(Boolean).filter(pid => (D.rosters[rid] || []).includes(pid) && P[pid] ? true : (lost++, false)),
+      picks: ks.split(',').filter(Boolean).map(x => { const q = x.split('x').map(Number); return { round: q[0], orig: q[1] }; }).filter(q => ((D.picks[rid] || {})[q.round] || []).includes(q.orig) ? true : (lost++, false)),
+    });
+    st.a = a; st.b = b; st.give = { a: side(a, m[3], m[4]), b: side(b, m[5], m[6]) };
+    store.set('teams', { a: st.a, b: st.b });
+    tradeNote = lost ? `${lost} part${lost === 1 ? '' : 's'} of that link no longer match${lost === 1 ? 'es' : ''} the rosters and ${lost === 1 ? 'was' : 'were'} left out.` : '';
+    tmode = anyGiven() ? 'result' : 'build'; sheet = null; renderTrade();
   }
   function renderTrade() {
     const dl = D.nfl_week > D.deadline ? `The Week ${D.deadline} trade deadline has passed. Trades open again after the title game.` : `Trade deadline: Week ${D.deadline}. During the season only players and 2027 picks can be traded.`;
@@ -1063,6 +1096,8 @@ __ENGINE__
   $('#view-trade-analyzer').addEventListener('click', e => {
     const b = e.target.closest('button'); if (!b) return;
     const top = () => { try { window.scrollTo(0, 0); } catch (err) {} };
+    if (b.id === 'share-trade') { shareLink(pageURL() + '#trade-analyzer/' + encTrade(), b, '#copied'); return; }
+    if (b.id !== 'copy' && !b.dataset.sheet && b.id !== 'sheet-close') tradeNote = '';
     if (b.id === 'clear') { st.give = { a: { players: [], picks: [] }, b: { players: [], picks: [] } }; tmode = 'build'; sheet = null; renderTrade(); top(); return; }
     if (b.id === 'analyze' || b.id === 'analyze2') { tmode = 'result'; sheet = null; renderTrade(); top(); return; }
     if (b.id === 'change') { tmode = 'build'; sheet = null; renderTrade(); top(); return; }
@@ -1199,7 +1234,7 @@ __ENGINE__
         <dl class="qa">
           <div><dt>Why is a player worth more to one team than another?</dt><dd>He is worth what he adds to the lineup that team can actually start. An 18-point receiver who replaces a 13-point flex adds 5. On a team where he replaces a 16-point starter he adds 2. That is also why the two sides of a trade rarely add up to the same number.</dd></div>
           <div><dt>How can a draft pick be worth points?</dt><dd>Each round is valued by what players taken in that round of this league's 2026 draft have added to a lineup over a waiver pickup. A pick can also be what pays for a keeper, and then losing it costs more than the round alone.</dd></div>
-          <div><dt>Why would a team pay more than it gets?</dt><dd>Points this season and points next season are not the same thing. Points now land in the games that decide this year's title. A pick helps a season nobody can forecast yet. The Trade Analyzer shows each team's chances this year and next so a manager can weigh that for himself.</dd></div>
+          <div><dt>Why would a team pay more than it gets?</dt><dd>Points this season and points next season are not the same thing. Points now land in the games that decide this year's title. A pick helps a season nobody can forecast yet. The Trade Analyzer gives no verdict up top. It shows each team's chances this year and next, then three ways to read the trade, so a manager can weigh it for what his own team is going for.</dd></div>
           <div><dt>How accurate are the odds?</dt><dd>Not proven yet. They come from simulating the rest of the season thousands of times from Sleeper's projections, and they have not been checked against how seasons actually finish. The site began saving its odds every day on November 10, 2026 so they can be scored later.</dd></div>
           <div><dt>What is fact and what is estimate?</dt><dd><span class="pill fact">Sleeper</span> Records, scores, rosters, picks and league history come straight from Sleeper. <span class="pill est">Simulation</span> Every percentage is simulated. <span class="pill est">Rebuilt</span> Week-by-week odds before November 10, 2026 were worked out after the fact. <span class="pill est">Estimate</span> Next year's draft positions and keeper values come from today's market values.</dd></div>
         </dl></div>
@@ -1262,6 +1297,7 @@ __ENGINE__
     let arg = '';
     if (String(v || '').includes('/')) { arg = v.slice(v.indexOf('/') + 1); v = v.slice(0, v.indexOf('/')); }
     if (arg && v === 'playoff-scenarios') { loadSharedPicks(arg); try { history.replaceState(null, '', '#' + v); } catch (err) {} }
+    if (arg && v === 'trade-analyzer') { loadSharedTrade(arg); try { history.replaceState(null, '', '#' + v); } catch (err) {} }
     if (v === 'trade-judge') v = 'trade-analyzer';
     if (!VIEWS.includes(v)) v = 'home';
     VIEWS.forEach(x => { $('#view-' + x).classList.toggle('on', x === v); $('#tab-' + x).setAttribute('aria-selected', String(x === v)); });

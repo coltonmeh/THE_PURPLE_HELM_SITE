@@ -27,7 +27,7 @@ const hub = Object.keys(D.players).find(k => D.players[k].n === 'Chuba Hubbard')
 click(q(`[data-side="b"][data-player="${hub}"]`));
 console.log('pressed:', qa('.asset[aria-pressed="true"]').map(txt).join(' ## '));
 click(q('#analyze'));
-console.log('verdict:', txt(q('.band')), '|', txt(q('.verdict > p')));
+console.log('readings:', [...document.querySelectorAll('.read > p')].map(e => txt(e).slice(0, 60)).join(' | '));
 console.log('lines:', qa('.vlines .orow').map(txt).join(' ## '));
 console.log('team cards:', qa('.tcard').map(txt).join(' ## ').slice(0, 1400));
 console.log('dropdowns:', qa('.dd summary').map(txt).join(' / '), '| math teams:', qa('.dd .team-out').length);
