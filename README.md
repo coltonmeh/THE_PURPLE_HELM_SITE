@@ -40,6 +40,10 @@ node test_scen.js        # optional
 
 `data.json` and `index.html` are build outputs and are not kept in the repo.
 
+## Decisions on record
+
+- **Trade verdict rule** (kept as is for now by Colton, Nov 10, 2026). A team's change is its title chance, plus a third of its playoff chance, less a third of its last-place chance, this year and next year added together. Under 1 point either way is no real change. "Works for both" needs both teams to gain with the smaller gain at least a third of the larger; otherwise the trade "favors" whoever is ahead; both losing is "bad for both"; neither moving is "too close to call". The constants are `W_PO`, `W_LAST`, `CALL_FLAT` and `CALL_SHARE` in `engine.js`. The one-third weights and the 1-point floor are judgment, not measured.
+
 ## Known gaps
 
 - The build has not been run past Week 14 yet. Check it before the playoffs start.
