@@ -11,7 +11,7 @@ The website for The Purple Helm, a 12-team keeper fantasy football league on Sle
 - **Playoff scenarios:** each team's most likely path, and a simulator where you pick the winners.
 - **Trade Analyzer:** what a trade does to each team's chances this year and next.
 - **Keepers:** every team's 2027 keeper options under the league's keeper rules, and who holds which 2027 picks.
-- **Hall of Champions:** every finished season on Sleeper (champion, runner-up, third, top scorer, top record, last place, final standings), a record book and an all-time table.
+- **Hall of Champions:** every season since 2010 (champion, runner-up, third, top scorer, top record, final standings; last place for the Sleeper years), a record book for each era and one all-time table.
 - **Rules:** the league rules, copied from the league's rules doc.
 - **How it works:** the method, in plain words.
 
@@ -49,6 +49,7 @@ node test_scen.js        # optional
 
 - **Trade verdict rule** (kept as is for now by Colton, Nov 10, 2026). A team's change is its title chance, plus a third of its playoff chance, less a third of its last-place chance, this year and next year added together. Under 1 point either way is no real change. "Works for both" needs both teams to gain with the smaller gain at least a third of the larger; otherwise the trade "favors" whoever is ahead; both losing is "bad for both"; neither moving is "too close to call". The constants are `W_PO`, `W_LAST`, `CALL_FLAT` and `CALL_SHARE` in `engine.js`. The one-third weights and the 1-point floor are judgment, not measured.
 - **No headline verdict on a trade** (Colton, Nov 10, 2026). The result opens with the numbers: what changes hands and each team's chances before and after. Lower down it gives three readings, each on its own yardstick: chances (the rule above), price in points, and past league trades. A good trade calculator gives a manager enough to judge a trade for his own priorities without burying him in data.
+- **ESPN history on the site** (Colton, Nov 11, 2026). Current managers appear under their Sleeper usernames and former managers as first name and last initial. Eight team names are left out and those teams are shown by manager. The 2011 and 2012 team Colton ran with Ben as co-owner counts for both of them in the all-time table. The record book is split by era; the champions list and all-time table are combined.
 - **No win-now / balanced / rebuild switch** (Colton, Nov 10, 2026). A dial that changes the reading lets anyone get the answer they want.
 
 ## Parked ideas
@@ -62,7 +63,8 @@ node test_scen.js        # optional
 
 - The build has not been run past Week 14 yet. Check it before the playoffs start.
 - Week-by-week odds before November 10, 2026 are rebuilt from each week's records and rosters, not recorded at the time.
-- The Hall of Champions starts in 2022, when the league moved to Sleeper. Earlier champions would have to be added by hand.
+- The ESPN years (2010-2021) come from `espn_history.json`, a one-time read of ESPN league 412669 on November 11, 2026. Every team's record and points in it were checked against its game scores. The site never calls ESPN. Not brought over: player-by-player scores, drafts and transactions.
+- Last place is shown for the Sleeper years only. ESPN's records don't say how the league settled it before 2022.
 - The record book counts regular-season games only (Weeks 1-14). Playoff and Toilet Bowl games are used for the season results, not for records.
 - The site's odds have not been scored against results. Since November 10, 2026 the build saves one snapshot of the published odds a day to the `odds-log` branch (`save_snapshot.py`), so that can be done after the season. One season of 12 teams will be thin evidence; the weekly game win chances give more to score.
 - "What changed" on Home compares rebuilt week-by-week odds, not saved ones. Switch it to the odds log once that covers two weeks.

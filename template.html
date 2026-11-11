@@ -399,6 +399,16 @@ a.btn { text-decoration: none; display: inline-block; }
 .qa { display: grid; gap: 12px; }
 .qa dt { font-weight: 600; }
 .qa dd { margin: 2px 0 0; color: var(--ink); }
+.roll { table-layout: fixed; width: 100%; min-width: 0; }
+.roll th, .roll td { text-align: left; }
+.roll th:first-child { width: 62px; }
+.roll th:last-child { width: 33%; }
+.roll td:first-child { white-space: nowrap; }
+.roll .tn, .roll .sub { white-space: normal; overflow-wrap: anywhere; }
+.era > summary { font-family: var(--display); font-weight: 700; font-size: 1.15rem; color: var(--ink); }
+.era[open] > summary { margin-bottom: 4px; }
+.era .champ { background: var(--paper); }
+.era-h { font-size: 1rem; color: var(--muted); }
 .champs { display: grid; gap: 12px; }
 @media (min-width: 860px) { .champs { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); align-items: start; } }
 .champ-top { display: grid; grid-template-columns: auto minmax(0, 1fr); gap: 14px; align-items: center; }
@@ -1199,15 +1209,18 @@ __ENGINE__
   function renderHall() {
     const H = D.hall, el = $('#view-hall-of-champions');
     if (!H || !H.seasons) { el.innerHTML = '<div><h2>Hall of Champions</h2><p class="lede">League history is not available right now. It will be back with the next update.</p></div>'; return; }
-    const champs = new Set(H.seasons.map(x => x.champ.user)).size, n = H.seasons.length;
-    const b2b = H.seasons.some((x, i) => i + 1 < n && x.champ.user === H.seasons[i + 1].champ.user);
-    const honor = (label, t, extra) => t ? `<div class="honor"><dt>${label}</dt><dd><span class="tn">${esc(t.team)}</span><span class="sub">${esc(t.user)} · ${extra || t.rec}</span></dd></div>` : '';
-    const seasons = H.seasons.map(x => `
+    const n = H.seasons.length, champs = new Set(H.seasons.map(x => x.champ.user)).size;
+    const isE = x => x.era === 'espn', nE = H.seasons.filter(isE).length, nS = n - nE;
+    const pts = v => (+v.toFixed(2)).toLocaleString('en-US');
+    // a team whose name was left out is shown by its manager alone
+    const who = t => t.team ? `<span class="tn">${esc(t.team)}</span><span class="sub">${esc(t.user)}` : `<span class="tn">${esc(t.user)}</span><span class="sub">`;
+    const honor = (label, t, extra) => t ? `<div class="honor"><dt>${label}</dt><dd>${who(t)}${t.team ? ' · ' : ''}${extra || t.rec}</span></dd></div>` : '';
+    const card = x => `
       <div class="card champ">
         <div class="champ-top"><span class="yr">${x.season}</span>
-          <div><span class="pill">Champion</span><span class="champ-name">${esc(x.champ.team)}</span>
-          <span class="sub">${esc(x.champ.user)} · ${x.champ.rec} in the regular season</span>
-          <span class="sub">Won the two-week final ${x.final[0].toFixed(2)} to ${x.final[1].toFixed(2)}</span></div></div>
+          <div><span class="pill">Champion</span><span class="champ-name">${esc(x.champ.team || x.champ.user)}</span>
+          <span class="sub">${x.champ.team ? esc(x.champ.user) + ' · ' : ''}${x.champ.rec} in the regular season</span>
+          <span class="sub">Won the ${isE(x) ? '' : 'two-week '}final ${pts(x.final[0])} to ${pts(x.final[1])}</span></div></div>
         <dl class="honors">
           ${honor('Runner-up', x.runner)}${honor('Third place', x.third)}
           ${honor('Top scorer', x.top_pf, `${x.top_pf.pf.toLocaleString('en-US', { minimumFractionDigits: 1 })} points`)}${honor('Top record', x.top_rec)}
@@ -1215,24 +1228,43 @@ __ENGINE__
         </dl>
         <details class="fold"><summary>Final regular-season standings</summary>
           <div class="scroll"><table><thead><tr><th>Team</th><th>Record</th><th>Points</th></tr></thead><tbody>
-          ${x.table.map((t, i) => `<tr class="${i === 3 || i === 7 ? 'cut' : ''}"><td><span class="tn">${i + 1}. ${esc(t.team)}</span><span class="sub">${esc(t.user)}</span></td><td>${t.rec}</td><td>${t.pf.toLocaleString('en-US', { minimumFractionDigits: 1 })}</td></tr>`).join('')}
+          ${x.table.map((t, i) => `<tr class="${i === 3 || (!isE(x) && i === 7) ? 'cut' : ''}"><td><span class="tn">${i + 1}. ${esc(t.team || t.user)}</span><span class="sub">${t.team ? esc(t.user) : ''}</span></td><td>${t.rec}</td><td>${t.pf.toLocaleString('en-US', { minimumFractionDigits: 1 })}</td></tr>`).join('')}
           </tbody></table></div></details>
-      </div>`).join('');
-    const recs = H.records.map(r => `
+      </div>`;
+    const roll = H.seasons.map(x => `<tr><td><b>${x.season}</b></td><td><span class="tn">${esc(x.champ.team || x.champ.user)}</span><span class="sub">${x.champ.team ? esc(x.champ.user) + ' · ' : ''}${x.champ.rec}</span></td><td><span class="tn">${esc(x.runner.user)}</span></td></tr>`).join('');
+    const tile = r => `
       <div class="rbook"><span class="rbook-l">${esc(r.label)}</span><span class="rbook-v">${esc(r.value)}</span>
-        <span class="tn">${esc(r.who)}</span><span class="sub">${r.user ? esc(r.user) + ' · ' : ''}${esc(r.when)}</span><span class="sub">${esc(r.detail)}</span></div>`).join('');
-    const all = H.alltime.map(o => `<tr><td><span class="tn">${esc(o.user)}</span><span class="sub">${o.seasons} season${o.seasons === 1 ? '' : 's'}</span></td>
-      <td>${o.w}–${o.l}${o.t ? '–' + o.t : ''}</td><td>${(100 * (o.w + 0.5 * o.t) / Math.max(o.g, 1)).toFixed(0)}%</td><td>${(o.pf / Math.max(o.g, 1)).toFixed(1)}</td>
-      <td>${o.titles || '<span class="dim">0</span>'}</td><td>${o.playoffs || '<span class="dim">0</span>'}</td><td>${o.lasts || '<span class="dim">0</span>'}</td></tr>`).join('');
+        <span class="tn">${esc(r.who)}</span><span class="sub">${r.user ? esc(r.user) + ' · ' : ''}${esc(r.when)}</span><span class="sub">${esc(r.detail)}</span></div>`;
+    // back-to-back titles: who has done it, and whether anyone has since the move to Sleeper
+    const pairs = []; H.seasons.forEach((x, i) => { const y = H.seasons[i + 1]; if (y && y.season === x.season - 1 && y.champ.user === x.champ.user) pairs.push({ user: x.champ.user, a: y.season, b: x.season, espn: isE(x) }); });
+    const by = {}; pairs.forEach(q => (by[q.user] = by[q.user] || []).push(`${q.a}–${String(q.b).slice(2)}`));
+    const times = k => k === 1 ? 'once' : k === 2 ? 'twice' : `${k} times`;
+    const b2bText = Object.keys(by).length ? ` Back-to-back titles: ${Object.entries(by).map(([u, ys]) => `${esc(u)} ${times(ys.length)} (${ys.reverse().join(' and ')})`).join('; ')}.${pairs.some(q => !q.espn) ? '' : ' No one has done it since, so the dynasty pool is still unclaimed.'}` : ' No one has won back to back, so the dynasty pool is still unclaimed.';
+    // the all-time table ranks managers with three or more seasons; shorter stays follow
+    const pctOf = o => (o.w + 0.5 * o.t) / Math.max(o.g, 1);
+    const ranked = H.alltime.filter(o => o.seasons >= 3).sort((x, y) => pctOf(y) - pctOf(x)), brief = H.alltime.filter(o => o.seasons < 3).sort((x, y) => pctOf(y) - pctOf(x));
+    const arow = o => `<tr><td><span class="tn">${esc(o.user)}</span><span class="sub">${o.seasons} season${o.seasons === 1 ? '' : 's'}</span></td>
+      <td>${o.w}–${o.l}${o.t ? '–' + o.t : ''}</td><td>${(100 * pctOf(o)).toFixed(0)}%</td><td>${(o.pf / Math.max(o.g, 1)).toFixed(1)}</td>
+      <td>${o.titles || '<span class="dim">0</span>'}</td><td>${o.playoffs || '<span class="dim">0</span>'}</td><td>${o.lasts || '<span class="dim">0</span>'}</td></tr>`;
+    const sl = H.seasons.filter(x => !isE(x)), es = H.seasons.filter(isE);
     el.innerHTML = `
-      <div><h2>Hall of Champions</h2><p class="lede">Every season the league has played on Sleeper, ${H.first} to now: ${n} finished season${n === 1 ? '' : 's'}, ${champs} different champion${champs === 1 ? '' : 's'}.${b2b ? '' : ' No one has won back to back in that time, so the dynasty pool is still unclaimed.'}</p></div>
-      <div class="champs">${seasons}</div>
-      <div><h3>The record book</h3><p class="lede">Regular-season games only, ${H.first} through Week ${H.through} of ${H.season_now}. Team names are the ones in use that season.</p></div>
-      <div class="rbooks">${recs}</div>
+      <div><h2>Hall of Champions</h2><p class="lede">Every season since ${H.first}${nE ? `: ${nE} on ESPN and ${nS} on Sleeper` : ''}. ${champs} different champions in ${n} seasons.${b2bText}</p></div>
+      <div class="card"><h3>Roll of champions</h3>
+        <div class="scroll"><table class="roll"><thead><tr><th>Season</th><th>Champion</th><th>Runner-up</th></tr></thead><tbody>${roll}</tbody></table></div></div>
+      <div><h3>Season by season</h3></div>
+      <div class="champs">${sl.map(card).join('')}</div>
+      ${es.length ? `<details class="card fold era"><summary>The ESPN years, ${es[es.length - 1].season} to ${es[0].season}</summary>
+        <p class="note">Ten teams through 2013, twelve from 2014. The final was a single week. Last place isn't shown for these years: ESPN's records don't say how the league settled it then. A few team names are left out.</p>
+        <div class="champs">${es.map(card).join('')}</div></details>` : ''}
+      <div><h3>The record book</h3><p class="lede">Regular-season games only. The two eras are kept apart because the scoring and the league's size changed. Team names are the ones in use that season.</p></div>
+      <div><h3 class="era-h">On Sleeper, ${H.first_sleeper || H.first} through Week ${H.through} of ${H.season_now}</h3></div>
+      <div class="rbooks">${H.records.map(tile).join('')}</div>
+      ${H.records_espn && H.records_espn.length ? `<div><h3 class="era-h">On ESPN, ${es[es.length - 1].season} to ${es[0].season}</h3><p class="note">Scores were whole numbers in 2010 and 2011. ESPN's player-by-player scores weren't brought over, so there is no single-player record here.</p></div>
+      <div class="rbooks">${H.records_espn.map(tile).join('')}</div>` : ''}
       <div class="card"><h3>All-time table</h3>
-        <div class="scroll"><table class="alltime"><thead><tr><th>Manager</th><th><span class="lg">Record</span><span class="sm">W–L</span></th><th>Win %</th><th>Pts/gm</th><th>Titles</th><th><span class="lg">Playoffs</span><span class="sm">Top 4</span></th><th>Last</th></tr></thead><tbody>${all}</tbody></table></div>
-        <p class="note">Regular-season record and points, this season included. Sorted by win percentage. Playoffs (Top 4 on a phone) counts playoff trips, and Last counts last-place finishes.</p></div>
-      <p class="note">Last place goes to the loser of the Toilet Bowl: the bottom four play in Week 15, and the two losers meet over Weeks 16 and 17. Seasons before ${H.first} were played on another site and aren't in this data.</p>`;
+        <div class="scroll"><table class="alltime"><thead><tr><th>Manager</th><th><span class="lg">Record</span><span class="sm">W–L</span></th><th>Win %</th><th>Pts/gm</th><th>Titles</th><th><span class="lg">Playoffs</span><span class="sm">Top 4</span></th><th>Last</th></tr></thead><tbody>${ranked.map(arow).join('')}${brief.length ? `<tr class="cut"><td colspan="7"><span class="sub">Fewer than three seasons</span></td></tr>` + brief.map(arow).join('') : ''}</tbody></table></div>
+        <p class="note">Regular-season record and points across both eras, this season included. Sorted by win percentage. Playoffs (Top 4 on a phone) counts playoff trips. Last counts last-place finishes on Sleeper only. In 2011 and 2012 Twinfan01 and brobeck10 co-owned one team, and those seasons count for both. Points per game are not comparable across eras.</p></div>
+      <p class="note">On Sleeper, last place goes to the loser of the Toilet Bowl: the bottom four play in Week 15, and the two losers meet over Weeks 16 and 17. The ESPN years were read from ESPN's league archive on November 11, 2026.</p>`;
   }
 
   function renderHow() {

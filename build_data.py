@@ -148,6 +148,100 @@ def week_points(pids, w, proj, pos, slots, n_flex, fa, detail=False):
 
 
 # ------------------------------------------------------------------ league history
+def record_book(games, singles, seasons, log, pl):
+    """The record book for one era: single-week marks, season marks and the longest runs. Regular-season games only."""
+    if not games:
+        return []
+    for g in games:
+        for k in ("a", "b"):
+            if not g[k].get("team"): g[k] = {**g[k], "team": g[k]["user"], "user": ""}
+    when = lambda g: f"{g['yr']}, Week {g['w']}"
+    sides = [(g["pa"], g["a"], g["b"], g["pb"], g) for g in games] + [(g["pb"], g["b"], g["a"], g["pa"], g) for g in games]
+    hi = max(sides, key=lambda x: x[0]); lo = min(sides, key=lambda x: x[0])
+    close = min((g for g in games if g["pa"] != g["pb"]), key=lambda g: abs(g["pa"] - g["pb"]))
+    blow = max(games, key=lambda g: abs(g["pa"] - g["pb"]))
+    hi_loss = max((x for x in sides if x[0] < x[3]), key=lambda x: x[0]); lo_win = min((x for x in sides if x[0] > x[3]), key=lambda x: x[0])
+    one = max(singles, key=lambda x: x[0]) if singles else None
+    ord2 = lambda g: (g["a"], g["pa"], g["b"], g["pb"]) if g["pa"] >= g["pb"] else (g["b"], g["pb"], g["a"], g["pa"])
+    vs = lambda me, opp, mine, theirs: f"{mine:.2f} to {theirs:.2f} against {opp['team']}"
+    records = [
+        {"label": "Highest score in a week", "value": f"{hi[0]:.2f}", "who": hi[1]["team"], "user": hi[1]["user"], "when": when(hi[4]), "detail": f"Beat {hi[2]['team']}, who scored {hi[3]:.2f}" if hi[0] > hi[3] else f"Lost to {hi[2]['team']}, who scored {hi[3]:.2f}"},
+        {"label": "Lowest score in a week", "value": f"{lo[0]:.2f}", "who": lo[1]["team"], "user": lo[1]["user"], "when": when(lo[4]), "detail": f"Against {lo[2]['team']}, who scored {lo[3]:.2f}"},
+    ]
+    w_, wp, l_, lp = ord2(close)
+    records.append({"label": "Closest game", "value": f"{wp - lp:.2f}", "who": w_["team"], "user": w_["user"], "when": when(close), "detail": f"Won {wp:.2f} to {lp:.2f} over {l_['team']}"})
+    w_, wp, l_, lp = ord2(blow)
+    records.append({"label": "Biggest blowout", "value": f"{wp - lp:.2f}", "who": w_["team"], "user": w_["user"], "when": when(blow), "detail": f"Won {wp:.2f} to {lp:.2f} over {l_['team']}"})
+    records.append({"label": "Most points in a loss", "value": f"{hi_loss[0]:.2f}", "who": hi_loss[1]["team"], "user": hi_loss[1]["user"], "when": when(hi_loss[4]), "detail": f"{hi_loss[2]['team']} scored {hi_loss[3]:.2f}"})
+    records.append({"label": "Fewest points in a win", "value": f"{lo_win[0]:.2f}", "who": lo_win[1]["team"], "user": lo_win[1]["user"], "when": when(lo_win[4]), "detail": f"{lo_win[2]['team']} scored {lo_win[3]:.2f}"})
+    if one:
+        v, pid, r, yr, w, who_ = one
+        nm = (pl.get(pid, {}).get("full_name") or f"{pl.get(pid, {}).get('first_name', '')} {pl.get(pid, {}).get('last_name', '')}".strip() or pid)
+        records.append({"label": "Most points by one starter", "value": f"{v:.2f}", "who": nm, "user": "", "when": f"{yr}, Week {w}", "detail": f"Started by {who_[r]['team']} ({who_[r]['user']})"})
+    full = [(t, s_) for s_ in seasons for t in s_["table"]]
+    if full:
+        t, s_ = max(full, key=lambda x: x[0]["pf"]); records.append({"label": "Most points in a season", "value": f"{t['pf']:,.1f}", "who": t["team"] or t["user"], "user": t["user"] if t["team"] else "", "when": str(s_["season"]), "detail": f"Finished {t['rec']}"})
+        t, s_ = min(full, key=lambda x: x[0]["pf"]); records.append({"label": "Fewest points in a season", "value": f"{t['pf']:,.1f}", "who": t["team"] or t["user"], "user": t["user"] if t["team"] else "", "when": str(s_["season"]), "detail": f"Finished {t['rec']}"})
+        wins_of = lambda t: int(t["rec"].split("–")[0])
+        t, s_ = max(full, key=lambda x: (wins_of(x[0]), x[0]["pf"])); records.append({"label": "Best record in a season", "value": t["rec"], "who": t["team"] or t["user"], "user": t["user"] if t["team"] else "", "when": str(s_["season"]), "detail": f"{t['pf']:,.1f} points"})
+        t, s_ = min(full, key=lambda x: (wins_of(x[0]), x[0]["pf"])); records.append({"label": "Worst record in a season", "value": t["rec"], "who": t["team"] or t["user"], "user": t["user"] if t["team"] else "", "when": str(s_["season"]), "detail": f"{t['pf']:,.1f} points"})
+    # longest runs of wins and of losses, carried across seasons
+    def run(kind):
+        best = (0, None, None)
+        for u, rows in log.items():
+            n, start = 0, None
+            for row in rows:
+                if row[2] == kind:
+                    n, start = n + 1, (start if n else row)
+                    if n > best[0]: best = (n, start, row)
+                else:
+                    n = 0
+        return best
+    for kind, label in (("W", "Longest winning streak"), ("L", "Longest losing streak")):
+        n, a, b = run(kind)
+        if n:
+            span = f"{a[0]}, Weeks {a[1]}–{b[1]}" if a[0] == b[0] else f"{a[0]} Week {a[1]} to {b[0]} Week {b[1]}"
+            records.append({"label": label, "value": f"{n} games", "who": b[3]["team"] or b[3]["user"], "user": b[3]["user"] if b[3]["team"] else "", "when": span, "detail": "Regular-season games"})
+    return records
+
+
+def espn_seasons(path="espn_history.json"):
+    """The ESPN years (2010-2021) from the one-time import: season cards, games, each manager's results in order,
+    and the all-time counts. Last place is left out: ESPN's records don't show how the league decided it then."""
+    src = json.loads(Path(path).read_text())
+    seasons, games, log, per = [], [], {}, {}
+    for S in src["seasons"]:
+        yr, reg = S["season"], S["reg_weeks"]
+        T = {t["id"]: t for t in S["teams"]}
+        who = {i: {"user": " & ".join(t["mgrs"]), "team": t["team"]} for i, t in T.items()}
+        rec = lambda i: f"{T[i]['w']}–{T[i]['l']}" + (f"–{T[i]['t']}" if T[i]["t"] else "")
+        tag = lambda i, extra=None: {"user": who[i]["user"], "team": who[i]["team"], "rec": rec(i), **(extra or {})}
+        for mp, h, hp, a, ap, tier in S["games"]:
+            if tier != "N" or a is None:
+                continue
+            games.append({"yr": yr, "w": mp, "a": who[h], "b": who[a], "pa": hp, "pb": ap})
+            for i, mine, theirs in ((h, hp, ap), (a, ap, hp)):
+                for m in T[i]["mgrs"]:
+                    log.setdefault(m, []).append((yr, mp, "W" if mine > theirs else "L" if mine < theirs else "T", who[i]))
+        last_w = max(g[0] for g in S["games"])
+        fin = next(g for g in S["games"] if g[5] == "W" and g[0] == last_w)
+        third = next((g for g in S["games"] if g[5] == "C" and g[0] == last_w), None)
+        win = lambda g: (g[1], g[3]) if g[2] > g[4] else (g[3], g[1])
+        cw, cl = win(fin)
+        seed = sorted(T, key=lambda i: T[i]["seed"])
+        top_pf = max(T, key=lambda i: T[i]["pf"])
+        for i, t in T.items():
+            for m in t["mgrs"]:                                       # a co-owned team counts for both of its managers
+                o = per.setdefault(m, {"w": 0, "l": 0, "t": 0, "pf": 0.0, "g": 0, "seasons": 0, "titles": 0, "playoffs": 0, "lasts": 0})
+                o["w"] += t["w"]; o["l"] += t["l"]; o["t"] += t["t"]; o["pf"] += t["pf"]; o["g"] += t["w"] + t["l"] + t["t"]; o["seasons"] += 1
+                o["playoffs"] += t["seed"] <= S["playoff_teams"]; o["titles"] += i == cw
+        seasons.append({"season": yr, "era": "espn", "champ": tag(cw), "runner": tag(cl), "third": tag(win(third)[0]) if third else None, "last": None,
+                        "top_pf": tag(top_pf, {"pf": round(T[top_pf]["pf"], 1)}), "top_rec": tag(seed[0]),
+                        "final": [max(fin[2], fin[4]), min(fin[2], fin[4])], "final_weeks": 1, "size": len(T),
+                        "table": [{"user": who[i]["user"], "team": who[i]["team"], "rec": rec(i), "pf": round(T[i]["pf"], 1)} for i in seed]})
+    return seasons, games, log, per
+
+
 def hall_of_champions(lg, pl, last_done):
     """Champions, season awards and the record book, for every season the league has played on Sleeper.
     Records count regular-season games only (Weeks 1-14): lineups in the dead consolation weeks aren't real."""
@@ -225,57 +319,22 @@ def hall_of_champions(lg, pl, last_done):
                         "last": tag(last), "top_pf": tag(top_pf, {"pf": round(PF[top_pf], 1)}), "top_rec": tag(seed[0]),
                         "final": [round(sum(pts[w].get(fin["w"], 0) for w in (ps + 1, ps + 2)), 2), round(sum(pts[w].get(fin["l"], 0) for w in (ps + 1, ps + 2)), 2)],
                         "table": [{"user": who[r]["user"], "team": who[r]["team"], "rec": rec(r), "pf": round(PF[r], 1)} for r in seed]})
-    # ---- the record book
-    when = lambda g: f"{g['yr']}, Week {g['w']}"
-    sides = [(g["pa"], g["a"], g["b"], g["pb"], g) for g in games] + [(g["pb"], g["b"], g["a"], g["pa"], g) for g in games]
-    hi = max(sides, key=lambda x: x[0]); lo = min(sides, key=lambda x: x[0])
-    close = min((g for g in games if g["pa"] != g["pb"]), key=lambda g: abs(g["pa"] - g["pb"]))
-    blow = max(games, key=lambda g: abs(g["pa"] - g["pb"]))
-    hi_loss = max((x for x in sides if x[0] < x[3]), key=lambda x: x[0]); lo_win = min((x for x in sides if x[0] > x[3]), key=lambda x: x[0])
-    one = max(singles, key=lambda x: x[0]) if singles else None
-    ord2 = lambda g: (g["a"], g["pa"], g["b"], g["pb"]) if g["pa"] >= g["pb"] else (g["b"], g["pb"], g["a"], g["pa"])
-    vs = lambda me, opp, mine, theirs: f"{mine:.2f} to {theirs:.2f} against {opp['team']}"
-    records = [
-        {"label": "Highest score in a week", "value": f"{hi[0]:.2f}", "who": hi[1]["team"], "user": hi[1]["user"], "when": when(hi[4]), "detail": f"Beat {hi[2]['team']}, who scored {hi[3]:.2f}" if hi[0] > hi[3] else f"Lost to {hi[2]['team']}, who scored {hi[3]:.2f}"},
-        {"label": "Lowest score in a week", "value": f"{lo[0]:.2f}", "who": lo[1]["team"], "user": lo[1]["user"], "when": when(lo[4]), "detail": f"Against {lo[2]['team']}, who scored {lo[3]:.2f}"},
-    ]
-    w_, wp, l_, lp = ord2(close)
-    records.append({"label": "Closest game", "value": f"{wp - lp:.2f}", "who": w_["team"], "user": w_["user"], "when": when(close), "detail": f"Won {wp:.2f} to {lp:.2f} over {l_['team']}"})
-    w_, wp, l_, lp = ord2(blow)
-    records.append({"label": "Biggest blowout", "value": f"{wp - lp:.2f}", "who": w_["team"], "user": w_["user"], "when": when(blow), "detail": f"Won {wp:.2f} to {lp:.2f} over {l_['team']}"})
-    records.append({"label": "Most points in a loss", "value": f"{hi_loss[0]:.2f}", "who": hi_loss[1]["team"], "user": hi_loss[1]["user"], "when": when(hi_loss[4]), "detail": f"{hi_loss[2]['team']} scored {hi_loss[3]:.2f}"})
-    records.append({"label": "Fewest points in a win", "value": f"{lo_win[0]:.2f}", "who": lo_win[1]["team"], "user": lo_win[1]["user"], "when": when(lo_win[4]), "detail": f"{lo_win[2]['team']} scored {lo_win[3]:.2f}"})
-    if one:
-        v, pid, r, yr, w, who_ = one
-        nm = (pl.get(pid, {}).get("full_name") or f"{pl.get(pid, {}).get('first_name', '')} {pl.get(pid, {}).get('last_name', '')}".strip() or pid)
-        records.append({"label": "Most points by one starter", "value": f"{v:.2f}", "who": nm, "user": "", "when": f"{yr}, Week {w}", "detail": f"Started by {who_[r]['team']} ({who_[r]['user']})"})
-    full = [(t, s_) for s_ in seasons for t in s_["table"]]
-    if full:
-        t, s_ = max(full, key=lambda x: x[0]["pf"]); records.append({"label": "Most points in a season", "value": f"{t['pf']:,.1f}", "who": t["team"], "user": t["user"], "when": str(s_["season"]), "detail": f"Finished {t['rec']}"})
-        t, s_ = min(full, key=lambda x: x[0]["pf"]); records.append({"label": "Fewest points in a season", "value": f"{t['pf']:,.1f}", "who": t["team"], "user": t["user"], "when": str(s_["season"]), "detail": f"Finished {t['rec']}"})
-        wins_of = lambda t: int(t["rec"].split("–")[0])
-        t, s_ = max(full, key=lambda x: (wins_of(x[0]), x[0]["pf"])); records.append({"label": "Best record in a season", "value": t["rec"], "who": t["team"], "user": t["user"], "when": str(s_["season"]), "detail": f"{t['pf']:,.1f} points"})
-        t, s_ = min(full, key=lambda x: (wins_of(x[0]), x[0]["pf"])); records.append({"label": "Worst record in a season", "value": t["rec"], "who": t["team"], "user": t["user"], "when": str(s_["season"]), "detail": f"{t['pf']:,.1f} points"})
-    # longest runs of wins and of losses, carried across seasons
-    def run(kind):
-        best = (0, None, None)
-        for u, rows in log.items():
-            n, start = 0, None
-            for row in rows:
-                if row[2] == kind:
-                    n, start = n + 1, (start if n else row)
-                    if n > best[0]: best = (n, start, row)
-                else:
-                    n = 0
-        return best
-    for kind, label in (("W", "Longest winning streak"), ("L", "Longest losing streak")):
-        n, a, b = run(kind)
-        if n:
-            span = f"{a[0]}, Weeks {a[1]}–{b[1]}" if a[0] == b[0] else f"{a[0]} Week {a[1]} to {b[0]} Week {b[1]}"
-            records.append({"label": label, "value": f"{n} games", "who": b[3]["team"], "user": b[3]["user"], "when": span, "detail": "Regular-season games"})
-    alltime = [{"user": name_now[u], **{k: (round(v, 1) if k == "pf" else v) for k, v in o.items()}} for u, o in per_owner.items()]
+    records = record_book(games, singles, seasons, log, pl)
+    merged = {name_now[u]: dict(o) for u, o in per_owner.items()}
+    e_seasons, e_records, first = [], [], int(chain[-1]["season"])
+    try:                                                              # the ESPN years, when the import file is there
+        e_seasons, e_games, e_log, e_per = espn_seasons()
+        e_records = record_book(e_games, [], e_seasons, e_log, pl)
+        for m, o in e_per.items():
+            t = merged.setdefault(m, {k: (0.0 if k == "pf" else 0) for k in o})
+            for k, v in o.items(): t[k] += v
+        first = min(first, e_seasons[0]["season"])
+    except Exception as err:
+        print(f"hall: ESPN years skipped ({type(err).__name__}: {err})", file=sys.stderr); e_seasons, e_records = [], []
+    alltime = [{"user": m, **{k: (round(v, 1) if k == "pf" else int(v)) for k, v in o.items()}} for m, o in merged.items()]
     alltime.sort(key=lambda o: -((o["w"] + 0.5 * o["t"]) / max(o["g"], 1)))
-    return {"first": int(chain[-1]["season"]), "through": last_done, "season_now": int(lg["season"]), "seasons": seasons[::-1], "records": records, "alltime": alltime}
+    return {"first": first, "first_sleeper": int(chain[-1]["season"]), "through": last_done, "season_now": int(lg["season"]),
+            "seasons": seasons[::-1] + e_seasons[::-1], "records": records, "records_espn": e_records, "alltime": alltime}
 
 
 # ------------------------------------------------------------------ keepers
