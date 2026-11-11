@@ -12,6 +12,7 @@ The website for The Purple Helm, a 12-team keeper fantasy football league on Sle
 - **Trade Analyzer:** what a trade does to each team's chances this year and next.
 - **Keepers:** every team's 2027 keeper options under the league's keeper rules, and who holds which 2027 picks.
 - **Hall of Champions:** every season since 2010 (champion, runner-up, third, top scorer, top record, final standings; last place for the Sleeper years), a record book for each era and one all-time table.
+- **Newsletter** (built, switched off): an index of the commissioner's newsletters by season and week. Each issue opens where he published it. The tab shows only when `newsletters.json` is in the repo; see "Parked ideas".
 - **Rules:** the league rules, copied from the league's rules doc.
 - **How it works:** the method, in plain words.
 
@@ -53,6 +54,8 @@ node test_scen.js        # optional
 - **No win-now / balanced / rebuild switch** (Colton, Nov 10, 2026). A dial that changes the reading lets anyone get the answer they want.
 
 ## Parked ideas
+
+- **Newsletter tab** (built Nov 11, 2026; off until the commissioner agrees). The page code is live but does nothing without `newsletters.json`, which is not in this repo yet. To turn it on: add that file (season, week, date, kind, link and an optional one-line note for each issue, plus the Drive folder link) and push. The tab then appears between Hall of Champions and Rules. The site holds only the index. The 2019 to 2021 PDFs sit in a Google Drive folder that must be shared with league members, and the later issues are the commissioner's own Canva pages. The newsletters name managers in full and aren't edited for the public, which is why they aren't copied here.
 
 - **Game-day Home page** (parked by Colton, Nov 10, 2026, until he has league feedback on the site as it is). During a live week: a scoreboard with current score, projected final and win chance now against kickoff; the teams whose playoff or Toilet Bowl chances have moved since kickoff; and a page that refreshes itself. Sleeper's API can be read straight from a browser, so scores could update every minute while the odds follow the build. To settle first:
   - The build only knows whether an NFL team has played, so a starter who is mid-game counts at his points so far with nothing more coming. A fix needs a game clock from a new source (ESPN's public scoreboard was the candidate); Colton has not approved one.

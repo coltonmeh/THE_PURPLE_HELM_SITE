@@ -424,6 +424,19 @@ a.btn { text-decoration: none; display: inline-block; }
 .rbook-l { font-size: .72rem; font-weight: 600; color: var(--muted); text-transform: uppercase; letter-spacing: .05em; }
 .rbook-v { font-family: var(--display); font-weight: 700; font-size: 1.9rem; line-height: 1.1; color: var(--belt); font-variant-numeric: tabular-nums; }
 .dim { color: var(--muted); opacity: .6; }
+.issues { list-style: none; margin: 0; padding: 0; display: grid; }
+.issues li { border-top: 1px solid var(--line); }
+.issues li:first-child { border-top: 0; }
+.issue { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 2px 12px; align-items: baseline; padding: 10px 2px; color: var(--ink); text-decoration: none; }
+a.issue:hover .issue-t, a.issue:focus-visible .issue-t { color: var(--helm); text-decoration: underline; }
+.issue-t { font-weight: 600; }
+.issue-d { color: var(--muted); font-size: .86rem; white-space: nowrap; font-variant-numeric: tabular-nums; }
+.issue-n { grid-column: 1 / -1; color: var(--muted); font-size: .9rem; font-style: italic; overflow-wrap: anywhere; }
+.issue.off { opacity: .6; }
+.issue .pill { margin-left: 6px; }
+.news-yr { font-family: var(--saga); font-weight: 900; font-size: 1.6rem; line-height: 1; color: var(--belt); }
+.news-grid { display: grid; gap: 12px; }
+@media (min-width: 860px) { .news-grid { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); align-items: start; } }
 .alltime .sm { display: none; }
 @media (max-width: 600px) { .alltime th, .alltime td { padding: 8px 3px; font-size: .86rem; } .alltime th { font-size: .64rem; letter-spacing: .02em; } .alltime .lg { display: none; } .alltime .sm { display: inline; } }
 .pill { display: inline-block; font-size: .7rem; font-weight: 600; text-transform: uppercase; letter-spacing: .05em; border-radius: 4px; padding: 1px 6px; background: var(--belt-soft); color: var(--belt); vertical-align: 1px; }
@@ -464,6 +477,7 @@ a.btn { text-decoration: none; display: inline-block; }
   <section class="view" id="view-trade-analyzer" aria-labelledby="tab-trade-analyzer"></section>
   <section class="view" id="view-keepers" aria-labelledby="tab-keepers"></section>
   <section class="view" id="view-hall-of-champions" aria-labelledby="tab-hall-of-champions"></section>
+  <section class="view" id="view-newsletter" aria-labelledby="tab-newsletter"></section>
   <section class="view" id="view-rules" aria-labelledby="tab-rules">
     <div><h2>League rules</h2><p class="lede">Copied from the league's rules doc as it stood on September 9, 2026. The Google Doc is the official version: where the two differ, the doc wins.</p></div>
     <div class="row"><a class="btn" href="https://docs.google.com/document/d/1m0oiij2ANRq8ofDrMjAKCpLCjvzrfLYr_CO8ChS9P8k/" target="_blank" rel="noopener">Open the official rules doc</a></div>
@@ -1267,6 +1281,31 @@ __ENGINE__
       <p class="note">On Sleeper, last place goes to the loser of the Toilet Bowl: the bottom four play in Week 15, and the two losers meet over Weeks 16 and 17. The ESPN years were read from ESPN's league archive on November 11, 2026.</p>`;
   }
 
+  // ---------- newsletter: an index only. The issues themselves stay where the commissioner put them.
+  function renderNews() {
+    const N = D.news, el = $('#view-newsletter');
+    if (!N || !N.issues || !N.issues.length) { el.innerHTML = ''; return; }
+    const MON = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+    const day = d => { const [y, m, dd] = d.split('-').map(Number); return `${MON[m - 1]} ${dd}`; };
+    const wk = x => x.week ? `Week ${x.week}` : 'Preseason';
+    const kind = { pdf: 'PDF', canva: 'Canva', video: 'Video' };
+    const where = x => x.kind === 'pdf' ? 'Opens in the league Drive folder' : 'Opens on Canva';
+    const row = x => {
+      const inner = `<span class="issue-t">${wk(x)}<span class="pill${x.url ? '' : ' flag'}">${x.url ? kind[x.kind] || '' : 'Link closed'}</span></span><span class="issue-d">${day(x.date)}</span>${x.note ? `<span class="issue-n">“${esc(x.note)}”</span>` : ''}`;
+      return x.url ? `<li><a class="issue" href="${esc(x.url)}" target="_blank" rel="noopener" title="${where(x)}">${inner}</a></li>` : `<li><span class="issue off">${inner}</span></li>`;
+    };
+    const years = [...new Set(N.issues.map(x => x.season))];
+    const card = y => { const xs = N.issues.filter(x => x.season === y); return `<div class="card"><h3><span class="news-yr">${y}</span> <span class="sub">${xs.length} issue${xs.length === 1 ? '' : 's'}</span></h3><ul class="issues">${xs.map(row).join('')}</ul></div>`; };
+    const latest = N.issues.find(x => x.url), first = years[years.length - 1];
+    const hasPdf = N.issues.some(x => x.kind === 'pdf');
+    el.innerHTML = `
+      <div><h2>Newsletter</h2><p class="lede">The commissioner's newsletter${N.by ? `, written by ${esc(N.by)}` : ''}: ${N.issues.length} issues since ${first}. This page is only the index. Each issue opens where he published it.</p></div>
+      ${latest ? `<div class="card spot"><div><span class="pill">Latest issue</span></div><h3>${latest.season} ${wk(latest)}</h3>${latest.note ? `<p class="note">“${esc(latest.note)}”</p>` : ''}
+        <div class="row"><a class="btn primary" href="${esc(latest.url)}" target="_blank" rel="noopener">Open it</a></div></div>` : ''}
+      <div class="news-grid">${years.map(card).join('')}</div>
+      <p class="note">${hasPdf ? `The PDF issues (${N.issues.filter(x => x.kind === 'pdf').slice(-1)[0].season} to ${N.issues.find(x => x.kind === 'pdf').season}) are in a Google Drive folder shared with league members only, so sign in to Google with the address the league uses for you. ` : ''}The later issues are on Canva and open for anyone with the link. Weeks that aren't listed had no newsletter, or the email didn't survive.</p>`;
+  }
+
   function renderHow() {
     const rounds = Array.from({ length: 15 }, (_, i) => i + 1).map(r => `<div><span>${ord(r)}</span><b>${E.roundVal(r).toFixed(1)}</b></div>`).join('');
     const B = E.bands;
@@ -1333,7 +1372,13 @@ __ENGINE__
   try { matchMedia('(prefers-color-scheme: light)').addEventListener('change', e => { if (!store.get('theme')) setTheme(e.matches ? 'light' : 'dark', false); }); } catch (err) {}
 
   // ---------- routing
-  const VIEWS = ['home', 'standings', 'playoff-scenarios', 'trade-analyzer', 'keepers', 'hall-of-champions', 'rules', 'how-it-works'];
+  // the Newsletter tab exists only when the build found its index file
+  const HAS_NEWS = !!(D.news && D.news.issues && D.news.issues.length);
+  if (HAS_NEWS) {
+    $('#tab-rules').insertAdjacentHTML('beforebegin', '<button class="tab" role="tab" data-view="newsletter" id="tab-newsletter">Newsletter</button>');
+    $('#nav-select option[value="rules"]').insertAdjacentHTML('beforebegin', '<option value="newsletter">Newsletter</option>');
+  }
+  const VIEWS = ['home', 'standings', 'playoff-scenarios', 'trade-analyzer', 'keepers', 'hall-of-champions', ...(HAS_NEWS ? ['newsletter'] : []), 'rules', 'how-it-works'];
   const HERO = { 'home': 'home', 'standings': 'standings', 'playoff-scenarios': 'war-room', 'trade-analyzer': 'trading-hall', 'keepers': 'keepers', 'hall-of-champions': 'hall' };
   const SHORT_HERO = ['standings', 'playoff-scenarios', 'trade-analyzer', 'keepers'];
   function show(v) {
@@ -1370,7 +1415,7 @@ __ENGINE__
     $('#rules-toc').addEventListener('click', e => { const b = e.target.closest('[data-jump]'); if (!b) return; try { heads[+b.dataset.jump].scrollIntoView({ behavior: 'smooth', block: 'start' }); } catch (err) {} });
   })();
   window.addEventListener('hashchange', () => show(location.hash.slice(1)));
-  renderHome(); renderStandings(); renderScen(); renderTrade(); renderKeepers(); renderHall(); renderHow();
+  renderHome(); renderStandings(); renderScen(); renderTrade(); renderKeepers(); renderHall(); renderNews(); renderHow();
   setTheme(theme(), false);
 })();
 </script>

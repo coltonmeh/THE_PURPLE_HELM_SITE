@@ -205,6 +205,19 @@ def record_book(games, singles, seasons, log, pl):
     return records
 
 
+def newsletters(path="newsletters.json"):
+    """The index of the commissioner's newsletters: season, week, date, a link and his one-line note. The page shows
+    the Newsletter tab only when this file is here, so leaving it out keeps the tab off. Newest season first."""
+    p = HERE / path
+    if not p.exists():
+        return None
+    src = json.loads(p.read_text())
+    issues = [{k: x[k] for k in ("season", "week", "date", "kind", "url", "note") if x.get(k) not in (None, "")}
+              for x in src.get("issues", []) if x.get("season") and x.get("date")]
+    issues.sort(key=lambda x: (-x["season"], -x["week"]))
+    return {"by": src.get("by", ""), "folder": src.get("folder", ""), "issues": issues} if issues else None
+
+
 def espn_seasons(path="espn_history.json"):
     """The ESPN years (2010-2021) from the one-time import: season cards, games, each manager's results in order,
     and the all-time counts. Last place is left out: ESPN's records don't show how the league decided it then."""
@@ -770,6 +783,10 @@ def main():
         hall = hall_of_champions(lg, pl, last_done)
     except Exception as err:                                          # history is a nice-to-have: never let it stop the site updating
         print(f"hall: skipped ({type(err).__name__}: {err})", file=sys.stderr); hall = None
+    try:
+        news = newsletters()
+    except Exception as err:                                          # same rule as the hall: never stop the site over it
+        print(f"newsletters: skipped ({type(err).__name__}: {err})", file=sys.stderr); news = None
     results = {str(w): [[a, round(pa_, 2), b, round(pb_, 2)] for (a, pa_), (b, pb_) in g] for w, g in week_games.items()}
     week_mu = {str(w): {str(r): round(float(mu[w][ix[r]]), 1) for r in rids} for w in range(cur, playoff_start)}
     now = dt.datetime.now(dt.timezone.utc).replace(microsecond=0)
@@ -796,7 +813,7 @@ def main():
                     for pid in sorted(rostered) if pid in meta},
         "fa": {str(w): {p: [round(v, 2) for v in fa[w][p]] for p in fa[w]} for w in fut},
         "trades": trades, "games": games_out, "reg_games": playoff_start - 1, "card": card, "scen": scen,
-        "hist": hist, "results": results, "week_mu": week_mu, "hall": hall,
+        "hist": hist, "results": results, "week_mu": week_mu, "hall": hall, "news": news,
         # what the page needs to rerun the season with a trade applied
         "sim": {"cur": cur, "live": week_started, "sd": WEEKLY_SD, "hsd": HORIZON_SD,
                 "sched": {str(w): [list(g) for g in sched[w]] for w in sched},

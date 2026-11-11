@@ -9,7 +9,7 @@ Everything here is readable by anyone. Never add:
 - anything from 4for4 or Draft Sharks (paid sources);
 - credentials, emails or account exports.
 
-Inputs are limited to the Sleeper API, FantasyCalc's public values, `fair_history.json` and `espn_history.json` (the league's 2010-2021 results, read from ESPN once on Nov 11, 2026 with Colton's approval; it holds usernames and first-name-last-initial only, never full names).
+Inputs are limited to the Sleeper API, FantasyCalc's public values, `fair_history.json` and `espn_history.json` (the league's 2010-2021 results, read from ESPN once on Nov 11, 2026 with Colton's approval; it holds usernames and first-name-last-initial only, never full names). One more is allowed once the commissioner agrees: `newsletters.json`, an index of his newsletters (links, dates and his one-line notes; never the newsletters themselves). Adding it turns the Newsletter tab on.
 
 ## How changes ship (proposed by Claude on Nov 10, 2026; Colton has not changed them)
 - A push to `main` rebuilds and publishes the site within a couple of minutes. There is no staging site.
