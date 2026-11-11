@@ -375,7 +375,7 @@ tr.cut td { border-bottom: 2px solid var(--helm); }
 .kv dd { margin: 0; font-weight: 500; }
 .best td:first-child { box-shadow: inset 4px 0 0 var(--belt); padding-left: 10px; }
 .hero.short { }
-@media (min-width: 860px) { .hero.short { aspect-ratio: 4.4 / 1; background-position: right 28%; } }
+@media (min-width: 860px) { .hero.short { aspect-ratio: 4.4 / 1; background-position: right 28%; } .hero.short[data-art="standings"] { background-position: right 4%; } }   /* keep the horn in the shorter crop */
 .src { font-size: .82rem; color: var(--muted); display: flex; flex-wrap: wrap; gap: 4px 12px; align-items: center; margin-top: 8px; }
 .src .pill { margin-right: 4px; }
 .pill.fact { background: var(--helm-soft); color: var(--helm); }
@@ -1316,7 +1316,7 @@ __ENGINE__
     // the banner for this section, with the section's own heading set over its dark side
     const art = HERO[v], hero = $('#hero'), own = $('#view-' + v + ' h2');
     VIEWS.forEach(x => $('#view-' + x).classList.toggle('has-hero', !!HERO[x]));
-    hero.hidden = !art; hero.classList.toggle('short', SHORT_HERO.includes(v));
+    hero.hidden = !art; hero.classList.toggle('short', SHORT_HERO.includes(v)); hero.dataset.art = art || '';
     if (art) { hero.style.backgroundImage = `url(assets/banner-${art}${theme() === 'light' ? '-light' : ''}.webp)`; $('#hero-title').textContent = own ? own.textContent : ''; }
     if (v === 'home') drawCharts();                           // the charts size themselves to the page, so draw once it is showing
   }
