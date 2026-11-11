@@ -51,6 +51,13 @@ node test_scen.js        # optional
 - **No headline verdict on a trade** (Colton, Nov 10, 2026). The result opens with the numbers: what changes hands and each team's chances before and after. Lower down it gives three readings, each on its own yardstick: chances (the rule above), price in points, and past league trades. A good trade calculator gives a manager enough to judge a trade for his own priorities without burying him in data.
 - **No win-now / balanced / rebuild switch** (Colton, Nov 10, 2026). A dial that changes the reading lets anyone get the answer they want.
 
+## Parked ideas
+
+- **Game-day Home page** (parked by Colton, Nov 10, 2026, until he has league feedback on the site as it is). During a live week: a scoreboard with current score, projected final and win chance now against kickoff; the teams whose playoff or Toilet Bowl chances have moved since kickoff; and a page that refreshes itself. Sleeper's API can be read straight from a browser, so scores could update every minute while the odds follow the build. To settle first:
+  - The build only knows whether an NFL team has played, so a starter who is mid-game counts at his points so far with nothing more coming. A fix needs a game clock from a new source (ESPN's public scoreboard was the candidate); Colton has not approved one.
+  - In-game win chance is a new published number, so it gets a private preview first.
+  - The fast schedule (every 20 minutes) covers Thursday night, Sunday and Monday night only. Thanksgiving afternoon, Black Friday and the Saturday games in Weeks 15-17 get the hourly build.
+
 ## Known gaps
 
 - The build has not been run past Week 14 yet. Check it before the playoffs start.
